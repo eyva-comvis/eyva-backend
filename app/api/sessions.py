@@ -41,7 +41,7 @@ async def create_session(cfg: SessionConfig, request: Request):
 
 @router.post("/{session_id}/blocks", response_model=BlockOut, status_code=201)
 async def start_block(session_id: str, request: Request):
-    s = require_active(get_session_or_404(request, session_id))
+    s = require_active(await get_session_or_404(request, session_id))
     if s.active_block or s.active_break:
         raise HTTPException(409, "Masih ada blok belajar atau istirahat yang aktif")
     b = Block(new_id(), len(s.blocks) + 1, s.study_seconds, now_dt(), mono())
@@ -56,7 +56,7 @@ async def start_block(session_id: str, request: Request):
 
 @router.post("/{session_id}/blocks/{block_id}/complete")
 async def complete_block(session_id: str, block_id: str, request: Request):
-    s = require_active(get_session_or_404(request, session_id))
+    s = require_active(await get_session_or_404(request, session_id))
     b = s.blocks.get(block_id)
     if b is None:
         raise HTTPException(404, "Block tidak ditemukan")
@@ -70,7 +70,7 @@ async def complete_block(session_id: str, block_id: str, request: Request):
 @router.post("/{session_id}/blocks/{block_id}/pause")
 async def pause_block(session_id: str, block_id: str, request: Request):
     """Jeda manual oleh pengguna (tombol Pause). Frontend berhenti mengirim frame selama dijeda."""
-    s = require_active(get_session_or_404(request, session_id))
+    s = require_active(await get_session_or_404(request, session_id))
     b = s.blocks.get(block_id)
     if b is None or b.status != "ACTIVE":
         raise HTTPException(404, "Block aktif tidak ditemukan")
@@ -83,7 +83,7 @@ async def pause_block(session_id: str, block_id: str, request: Request):
 @router.post("/{session_id}/blocks/{block_id}/resume")
 async def resume_block(session_id: str, block_id: str, request: Request):
     """'Saya siap melanjutkan' setelah saran tindakan (tambahan di luar daftar PRD)."""
-    s = require_active(get_session_or_404(request, session_id))
+    s = require_active(await get_session_or_404(request, session_id))
     b = s.blocks.get(block_id)
     if b is None or b.status != "ACTIVE":
         raise HTTPException(404, "Block aktif tidak ditemukan")
@@ -96,7 +96,7 @@ async def resume_block(session_id: str, block_id: str, request: Request):
 
 @router.post("/{session_id}/breaks", response_model=BreakOut, status_code=201)
 async def start_break(session_id: str, request: Request):
-    s = require_active(get_session_or_404(request, session_id))
+    s = require_active(await get_session_or_404(request, session_id))
     if s.active_block or s.active_break:
         raise HTTPException(409, "Selesaikan blok belajar terlebih dahulu")
     last = list(s.blocks.values())[-1] if s.blocks else None
@@ -112,7 +112,7 @@ async def start_break(session_id: str, request: Request):
 
 @router.post("/{session_id}/breaks/{break_id}/complete")
 async def complete_break(session_id: str, break_id: str, request: Request):
-    s = require_active(get_session_or_404(request, session_id))
+    s = require_active(await get_session_or_404(request, session_id))
     br = s.breaks.get(break_id)
     if br is None:
         raise HTTPException(404, "Break tidak ditemukan")
@@ -126,7 +126,7 @@ async def complete_break(session_id: str, break_id: str, request: Request):
 
 @router.post("/{session_id}/end", response_model=SummaryOut)
 async def end_session(session_id: str, request: Request, body: EndRequest | None = None):
-    s = get_session_or_404(request, session_id)
+    s = await get_session_or_404(request, session_id)
     if s.status == "ACTIVE":  # idempoten: panggilan kedua hanya mengembalikan summary
         reason = (body or EndRequest()).reason
         if (b := s.active_block):
@@ -164,14 +164,14 @@ async def create_insight(session_id: str, request: Request):
 @router.post("/{session_id}/break-tip", response_model=InsightOut)
 async def create_break_tip(session_id: str, request: Request):
     """Tip singkat AI di halaman Break, berdasarkan blok belajar yang baru selesai (sesi harus masih di memori)."""
-    s = get_session_or_404(request, session_id)
+    s = await get_session_or_404(request, session_id)
     return await generate_break_tip(break_context(s), get_settings())
 
 
 @router.post("/{session_id}/reflection")
 async def save_reflection(session_id: str, body: ReflectionRequest, request: Request):
     """Refleksi pengguna di halaman Session Wrap (Good / Okay / Tough). Boleh diubah setelah sesi berakhir."""
-    s = get_session_or_404(request, session_id)
+    s = await get_session_or_404(request, session_id)
     s.reflection = body.mood
     s.log("REFLECTION_SAVED", None, mood=body.mood)
     persist(request, s)

@@ -78,7 +78,8 @@ class SupabaseRepository:
                   .eq("session_id", session_id).execute()).data or []
         events = (self.client.table("events").select("*")
                   .eq("session_id", session_id).order("timestamp").execute()).data or []
-        return {"session": res.data[0], "blocks": blocks, "events": events}
+        breaks = (self.client.table("breaks").select("*").eq("session_id", session_id)).execute().data or []
+        return {"session": res.data[0], "blocks": blocks, "breaks": breaks, "events": events}
 
 
 def build_repository(settings: Settings) -> Repository:

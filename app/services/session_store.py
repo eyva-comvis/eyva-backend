@@ -152,6 +152,9 @@ class SessionStore:
         s.log("SESSION_CREATED")
         return s
 
+    def add(self, s: Session) -> None:
+        self._sessions[s.id] = s
+
     def all(self) -> list[Session]:
         return list(self._sessions.values())
 

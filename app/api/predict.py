@@ -51,7 +51,7 @@ def _response(s: Session, status: DrowsinessStatus, score: int, face: bool) -> P
 async def predict(session_id: str, body: PredictRequest, request: Request):
     from app.services.decision_engine import decide
 
-    s = require_active(get_session_or_404(request, session_id))
+    s = require_active(await get_session_or_404(request, session_id))
     block = s.active_block
     if block is None:
         raise HTTPException(409, "Tidak ada blok belajar aktif (monitoring hanya saat belajar)")
@@ -107,7 +107,7 @@ async def predict(session_id: str, body: PredictRequest, request: Request):
 
 @router.post("/{session_id}/alerts/{alert_id}/respond", response_model=AlertRespondResponse)
 async def respond_alert(session_id: str, alert_id: str, body: AlertRespondRequest, request: Request):
-    s = get_session_or_404(request, session_id)
+    s = await get_session_or_404(request, session_id)
     a = s.alerts.get(alert_id)
     if a is None:
         raise HTTPException(404, "Alert tidak ditemukan")

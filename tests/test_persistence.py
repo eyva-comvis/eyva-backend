@@ -153,8 +153,8 @@ def test_history_survives_server_restart(env):  # FR-16
     assert summ.status_code == 200 and summ.json()["end_reason"] == "MANUAL"
     assert any(e["event_type"] == "SESSION_ENDED" for e in summ.json()["events"])
     assert c.post(f"/sessions/{sid_old}/insights").status_code == 200
-    # sesi lama tidak bisa dimutasi setelah restart
-    assert c.post(f"/sessions/{sid_old}/blocks").status_code == 404
+    # sesi lama dimuat ulang dari DB tetapi sudah berakhir: tidak bisa ditambah blok
+    assert c.post(f"/sessions/{sid_old}/blocks").status_code == 409
 
 
 def test_session_active_in_db_but_lost_from_memory_is_interrupted(env):
@@ -181,3 +181,36 @@ def test_history_pagination_and_unknown_id(env):
 def test_health_reports_persistence_flag(env):
     c, _ = env
     assert c.get("/health").json()["persistence"] is True
+
+
+def test_active_session_survives_restart(env):
+    """Redeploy = memori kosong. Sesi aktif dimuat ulang dari database dan bisa dilanjutkan."""
+    from app.services.session_store import SessionStore
+
+    c, fake = env
+    sid = c.post("/sessions", json={"configured_study_seconds": 1500, "configured_break_seconds": 300, "title": "Bab 3"}).json()["id"]
+    bid = c.post(f"/sessions/{sid}/blocks").json()["id"]
+    c.post(f"/sessions/{sid}/blocks/{bid}/pause")
+    assert wait_for(lambda: "PAUSED_BY_USER" in {e["event_type"] for e in fake.tables.get("events", {}).values()})
+    time.sleep(0.2)
+
+    app.state.store = SessionStore()  # simulasi restart server
+    r = c.post(f"/sessions/{sid}/blocks/{bid}/resume")
+    assert r.status_code == 200, r.text
+    assert len(app.state.store.all()) == 1
+
+    c.post(f"/sessions/{sid}/blocks/{bid}/complete")
+    r = c.post(f"/sessions/{sid}/end", json={"reason": "COMPLETED"})
+    assert r.status_code == 200
+    sm = r.json()
+    assert sm["title"] == "Bab 3" and sm["status"] == "ENDED" and sm["blocks_completed"] == 1
+    types = [e["event_type"] for e in sm["events"]]
+    assert types.count("SESSION_CREATED") == 1  # tidak ada event ganda setelah dimuat ulang
+
+
+def test_restart_unknown_or_foreign_session_is_404(env):
+    from app.services.session_store import SessionStore
+
+    c, fake = env
+    app.state.store = SessionStore()
+    assert c.post("/sessions/doesnotexist/blocks").status_code == 404
