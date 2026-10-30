@@ -20,7 +20,7 @@ EXPECTED_CLASSES = {"eye_open", "eye_closed", "yawn", "no_yawn", "head_straight"
 
 
 class InferenceEngine(Protocol):
-    def predict(self, image_bytes: bytes) -> list[Detection]: ...
+    def predict(self, image_bytes: bytes, imgsz: int | None = None) -> list[Detection]: ...
     def info(self) -> dict: ...
 
 
@@ -30,7 +30,7 @@ class MockInference:
     def __init__(self, scenario: str = "normal"):
         self.scenario = scenario
 
-    def predict(self, image_bytes: bytes) -> list[Detection]:
+    def predict(self, image_bytes: bytes, imgsz: int | None = None) -> list[Detection]:
         if self.scenario == "drowsy":
             return [
                 Detection(label="eye_closed", confidence=0.9),
@@ -110,8 +110,8 @@ class YoloInference:
         if extra:
             log.warning("Kelas model di luar pipeline (diabaikan): %s", sorted(extra))
 
-    def _predict_raw(self, img: Any) -> list[Detection]:
-        kwargs: dict[str, Any] = {"conf": self.conf, "imgsz": self.imgsz, "verbose": False}
+    def _predict_raw(self, img: Any, imgsz: int | None = None) -> list[Detection]:
+        kwargs: dict[str, Any] = {"conf": self.conf, "imgsz": imgsz or self.imgsz, "verbose": False}
         if self.device:
             kwargs["device"] = self.device
         with self._lock:
@@ -126,11 +126,11 @@ class YoloInference:
                 out.append(Detection(label=label, confidence=float(conf), bbox=[float(v) for v in box]))
         return out
 
-    def predict(self, image_bytes: bytes) -> list[Detection]:
+    def predict(self, image_bytes: bytes, imgsz: int | None = None) -> list[Detection]:
         img = self.decoder(image_bytes)
         if img is None:  # JPEG rusak: sama dengan "tidak ada wajah", bukan error 500
             return []
-        return self._predict_raw(img)
+        return self._predict_raw(img, imgsz)
 
     def info(self) -> dict:
         return {"backend": "yolo", "model_path": self.model_path, "classes": sorted(set(self.class_map.values())),

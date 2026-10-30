@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     supabase_jwt_secret: str = ""  # hanya untuk proyek lama (HS256); proyek baru memakai JWKS dari SUPABASE_URL
     supabase_jwt_audience: str = "authenticated"
     auth_required: bool = False  # true = semua endpoint sesi butuh login
+    enable_detect: bool = False  # POST /detect (alat kumpul data, hanya untuk lokal; jangan aktifkan di produksi publik)
     supabase_service_key: str = ""
     # LLM (rekomendasi Summary + tip Break). Default OpenRouter + DeepSeek varian gratis; slug model bisa berubah,
     # cek https://openrouter.ai/models?q=deepseek&max_price=0 lalu isi LLM_MODEL.

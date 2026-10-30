@@ -129,3 +129,12 @@ def test_stats_endpoint_is_per_user(client):
     assert mine["sessions"] == 1 and len(mine["per_day"]) == 7
     assert client.get("/stats?days=7", headers=token("nobody")).json()["sessions"] == 0
     assert client.get("/stats?days=3").status_code == 422
+
+
+def test_detect_endpoint_is_disabled_by_default_and_returns_boxes_when_enabled(client, monkeypatch):
+    img = {"image_b64": "AAAA"}
+    assert client.post("/detect", json=img).status_code == 404
+    monkeypatch.setattr(get_settings(), "enable_detect", True)
+    r = client.post("/detect", json=img)
+    assert r.status_code == 200 and isinstance(r.json()["detections"], list)
+    assert client.post("/detect", json={"image_b64": "AAAA", "imgsz": 50}).status_code == 422

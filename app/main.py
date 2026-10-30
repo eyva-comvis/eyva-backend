@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import predict, sessions, stats
+from app.api import detect, predict, sessions, stats
 from app.core.config import get_settings
 from app.db.repository import Persister, build_repository
 from app.services.inference import build_engine
@@ -34,6 +34,7 @@ app.add_middleware(
 app.include_router(sessions.router)
 app.include_router(predict.router)
 app.include_router(stats.router)
+app.include_router(detect.router)
 
 
 @app.get("/health", tags=["meta"])
