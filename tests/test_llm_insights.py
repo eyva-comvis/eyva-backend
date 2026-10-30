@@ -98,7 +98,11 @@ def test_break_tip_llm_path(monkeypatch):
 def test_chat_sends_reasoning_controls_and_drops_leaked_reasoning():
     cap: list = []
     asyncio.run(llm.chat(_settings(), "S", "U", transport=_ok_transport(cap)))
-    assert cap[0]["reasoning"] == {"effort": "low", "exclude": True}
+    assert "reasoning" not in cap[0]  # provider non-OpenRouter (mis. Groq) bisa menolak parameter ini
+    cap_or: list = []
+    s_or = Settings(llm_api_key="k", llm_model="m:free", llm_base_url="https://openrouter.ai/api/v1")
+    asyncio.run(llm.chat(s_or, "S", "U", transport=_ok_transport(cap_or)))
+    assert cap_or[0]["reasoning"] == {"effort": "low", "exclude": True}
     leak = _ok_transport([], "I need to write ONE short tip for the Break page: 2-3 sentences...")
     assert asyncio.run(llm.chat(_settings(), "S", "U", transport=leak)) is None
     ok = _ok_transport([], "Stand up and stretch for a minute.")

@@ -51,9 +51,11 @@ async def _ask(client: httpx.AsyncClient, settings: Settings, headers: dict, mod
         "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
         "temperature": 0.5,
         "max_tokens": max_tokens,
-        # Model reasoning: batasi dan sembunyikan proses berpikir agar token tidak habis sebelum jawaban. Model lain mengabaikannya.
-        "reasoning": {"effort": "low", "exclude": True},
     }
+    if "openrouter.ai" in settings.llm_base_url:
+        # Model reasoning: batasi dan sembunyikan proses berpikir agar token tidak habis sebelum jawaban.
+        # Parameter ini khusus OpenRouter; provider lain (Groq, Gemini) bisa menolaknya.
+        body["reasoning"] = {"effort": "low", "exclude": True}
     try:
         r = await client.post(f"{settings.llm_base_url.rstrip('/')}/chat/completions", json=body, headers=headers)
         if r.status_code == 429:  # model gratis sering kena batas
