@@ -125,3 +125,18 @@ def test_chat_total_budget_stops_attempts():
     called = []
     t = httpx.MockTransport(lambda r: called.append(1) or httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]}))
     assert asyncio.run(llm.chat(s, "S", "U", transport=t)) is None and not called
+
+
+def test_reasoning_detector_catches_leaks_anywhere_but_not_good_answers():
+    bad = [
+        "The user had a very short study session. I need to write 3-5 sentences.",
+        "They got 1 prolonged eye closure, which triggered Alert 1.",
+        "Short session. Let me write the recommendation now.",
+        "Okay, let's think about this.",
+    ]
+    good = [
+        "You studied for about 25 minutes with a steady rhythm. Try standing up and stretching during your next break.",
+        "Stand up, stretch your arms overhead, and look out a window for 20 seconds.",
+    ]
+    assert all(llm.looks_like_reasoning(t) for t in bad)
+    assert not any(llm.looks_like_reasoning(t) for t in good)

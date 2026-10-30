@@ -26,9 +26,21 @@ class ChatResult(NamedTuple):
 _THINK = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
 # Model reasoning kadang membocorkan proses berpikir ke content (mis. saat token habis). Jangan tampilkan ke pengguna.
 _REASONING_LEAK = re.compile(
-    r"^\s*(okay|ok,|so,|hmm|let me|let's|i need to|i should|i must|we need to|we should|the user (wants|is asking|just)|first,)",
+    r"^\s*(okay|ok,|so,|hmm|let me|let's|i need to|i should|i must|we need to|we should|first,|the user\b|they (got|had|have)\b)",
     re.IGNORECASE,
 )
+# Penanda proses berpikir yang bisa muncul di MANA SAJA (mis. setelah kalimat pembuka yang tampak wajar).
+_REASONING_MARKERS = re.compile(
+    r"\bI need to (write|produce|give|craft|make)\b|\bI should (write|give|start)\b|\blet me (write|draft|think|check)\b"
+    r"|\b(3|three)\s*(-|to|–)\s*(5|five) sentences\b|\bstart with what the (session )?data shows\b",
+    re.IGNORECASE,
+)
+
+
+def looks_like_reasoning(text: str) -> bool:
+    return bool(_REASONING_LEAK.match(text) or _REASONING_MARKERS.search(text))
+
+
 _RETRY = "retry"  # penanda: coba model yang sama sekali lagi
 
 
@@ -59,7 +71,7 @@ async def _ask(client: httpx.AsyncClient, settings: Settings, headers: dict, mod
     if not text:
         log.warning("LLM %s: jawaban kosong", model)
         return _RETRY
-    if _REASONING_LEAK.match(text):
+    if looks_like_reasoning(text):
         log.warning("LLM %s: teks tampak seperti proses berpikir; dibuang", used)
         return _RETRY
     return ChatResult(text, used)
