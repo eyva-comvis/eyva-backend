@@ -56,6 +56,8 @@ async def _ask(client: httpx.AsyncClient, settings: Settings, headers: dict, mod
         # Model reasoning: batasi dan sembunyikan proses berpikir agar token tidak habis sebelum jawaban.
         # Parameter ini khusus OpenRouter; provider lain (Groq, Gemini) bisa menolaknya.
         body["reasoning"] = {"effort": "low", "exclude": True}
+    elif "groq.com" in settings.llm_base_url and model.startswith("openai/gpt-oss"):
+        body["reasoning_effort"] = "low"  # proses berpikir gpt-oss ada di field terpisah; batasi agar token cukup untuk jawaban
     try:
         r = await client.post(f"{settings.llm_base_url.rstrip('/')}/chat/completions", json=body, headers=headers)
         if r.status_code == 429:  # model gratis sering kena batas

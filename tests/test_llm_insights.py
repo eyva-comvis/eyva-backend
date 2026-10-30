@@ -103,6 +103,10 @@ def test_chat_sends_reasoning_controls_and_drops_leaked_reasoning():
     s_or = Settings(llm_api_key="k", llm_model="m:free", llm_base_url="https://openrouter.ai/api/v1")
     asyncio.run(llm.chat(s_or, "S", "U", transport=_ok_transport(cap_or)))
     assert cap_or[0]["reasoning"] == {"effort": "low", "exclude": True}
+    cap_g: list = []
+    s_g = Settings(llm_api_key="k", llm_model="openai/gpt-oss-120b", llm_base_url="https://api.groq.com/openai/v1")
+    asyncio.run(llm.chat(s_g, "S", "U", transport=_ok_transport(cap_g)))
+    assert cap_g[0]["reasoning_effort"] == "low" and "reasoning" not in cap_g[0]
     leak = _ok_transport([], "I need to write ONE short tip for the Break page: 2-3 sentences...")
     assert asyncio.run(llm.chat(_settings(), "S", "U", transport=leak)) is None
     ok = _ok_transport([], "Stand up and stretch for a minute.")
