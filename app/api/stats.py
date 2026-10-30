@@ -18,9 +18,11 @@ def _as_dt(v) -> datetime:
     return datetime.fromisoformat(str(v).replace("Z", "+00:00"))
 
 
-def _insight(n: int, avg_min: float, alerts: int, drowsy_pct: float, moods: dict[str, int], streak: int) -> str:
+def _insight(n: int, avg_min: float, alerts: int, drowsy_pct: float, moods: dict[str, int], streak: int, focus_s: int = 0) -> str:
     if n == 0:
         return "No sessions yet. Start one and your rhythm will show up here."
+    if focus_s < 600:  # kurang dari 10 menit: terlalu sedikit untuk menyimpulkan pola
+        return "Just getting started. A few longer sessions and your study rhythm will show up here."
     if drowsy_pct >= 15:
         return (f"Signs of drowsiness showed up in about {drowsy_pct:.0f}% of your study time. "
                 "Shorter blocks or taking your break a little earlier might feel better. These are visual indications, not a diagnosis.")
@@ -71,7 +73,7 @@ def compute_stats(items: list[SessionListItem], days: int, now: datetime | None 
         avg_session_minutes=round(avg, 1), drowsy_share_pct=round(pct, 1), current_streak_days=streak,
         mood_counts=moods,
         per_day=[DayStat(date=k, focus_minutes=round(v[0], 1), sessions=v[1], alerts=v[2]) for k, v in per_day.items()],
-        insight=_insight(counted, avg, alerts, pct, moods, streak),
+        insight=_insight(counted, avg, alerts, pct, moods, streak, focus),
     )
 
 
