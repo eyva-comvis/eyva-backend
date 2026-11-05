@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eyva Admin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237c3aed'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='white' stroke-width='3'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#faf8f2;--panel:#fff;--ink:#17141f;--muted:#6b6577;--line:#e6e1d8;--brand:#6d28d9;--brand-ink:#fff;--soft:#efe9fb;--ok:#15803d;--bad:#b91c1c;--warn:#b45309;--chart-grid:#e9e4da}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121016;--panel:#1b1822;--ink:#f1eef7;--muted:#a39bb3;--line:#2c2736;--brand:#a78bfa;--brand-ink:#17141f;--soft:#2a2240;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--chart-grid:#2c2736}}
+:root[data-theme="dark"]{--bg:#121016;--panel:#1b1822;--ink:#f1eef7;--muted:#a39bb3;--line:#2c2736;--brand:#a78bfa;--brand-ink:#17141f;--soft:#2a2240;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--chart-grid:#2c2736}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
+header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.logo{width:32px;height:32px;border-radius:9px;background:var(--brand);display:grid;place-items:center}
+.logo i{width:12px;height:12px;border:3px solid var(--brand-ink);border-radius:50%}
+h1{font-size:20px;margin:0}
+.spacer{flex:1}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+button,.btn{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 14px;border-radius:10px}
+button:hover{border-color:var(--brand)}
+button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:600}
+button:disabled{opacity:.6;cursor:wait}
+input{font:inherit;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.auth{max-width:420px;margin:8vh auto 0}
+.tabs{display:flex;gap:4px;background:var(--soft);padding:4px;border-radius:12px;margin:14px 0 6px}
+.tabs button{flex:1;border:0;background:transparent;padding:8px;border-radius:9px;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);font-weight:600}
+.msg{margin-top:12px;padding:10px 12px;border-radius:10px;font-size:14px;display:none}
+.msg.err{display:block;background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.msg.ok{display:block;background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.grid{display:grid;gap:14px}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.stat .v{font-size:28px;font-weight:700;letter-spacing:-.02em}
+.stat .k{color:var(--muted);font-size:13px}
+.two{grid-template-columns:2fr 1fr}
+@media (max-width:800px){.two{grid-template-columns:1fr}}
+h2{font-size:15px;margin:0 0 12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;background:var(--panel)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--ok)}.dot.off{background:var(--bad)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:13px}
+.canvas{position:relative;height:240px}
+.hidden{display:none!important}
+.sr{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section id="authView" class="auth card hidden">
+  <div style="display:flex;align-items:center;gap:10px"><div class="logo"><i></i></div><h1>Eyva Admin</h1></div>
+  <p class="muted small" style="margin:8px 0 0">Masuk dengan akun admin. Akun yang masuk lewat Google bisa membuat password lewat tab Lupa password.</p>
+  <div class="tabs" role="tablist" aria-label="Akun">
+    <button role="tab" id="t-login" aria-selected="true" data-tab="login">Masuk</button>
+    <button role="tab" id="t-register" aria-selected="false" data-tab="register">Daftar</button>
+    <button role="tab" id="t-forgot" aria-selected="false" data-tab="forgot">Lupa password</button>
+  </div>
+
+  <form id="loginForm" data-panel="login" autocomplete="on">
+    <label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" required>
+    <label for="lPass">Password</label><input id="lPass" type="password" autocomplete="current-password" required>
+    <div style="margin-top:16px"><button class="primary" style="width:100%" type="submit">Masuk</button></div>
+  </form>
+
+  <form id="registerForm" data-panel="register" class="hidden" autocomplete="on">
+    <label for="rEmail">Email</label><input id="rEmail" type="email" autocomplete="email" required>
+    <label for="rUser">Username (opsional)</label><input id="rUser" autocomplete="username" pattern="[A-Za-z0-9_.]{3,24}" placeholder="3-24 huruf, angka, _ atau .">
+    <label for="rPass">Password (min. 8 karakter)</label><input id="rPass" type="password" minlength="8" autocomplete="new-password" required>
+    <div style="margin-top:16px"><button class="primary" style="width:100%" type="submit">Daftar</button></div>
+  </form>
+  <form id="verifyForm" data-panel="verify" class="hidden">
+    <label for="vCode">Kode verifikasi dari email</label><input id="vCode" inputmode="numeric" pattern="[0-9]{6,10}" autocomplete="one-time-code" required>
+    <div style="margin-top:16px;display:flex;gap:8px"><button class="primary" style="flex:1" type="submit">Verifikasi</button><button type="button" id="resendBtn">Kirim ulang</button></div>
+  </form>
+
+  <form id="forgotForm" data-panel="forgot" class="hidden">
+    <div data-step="1"><label for="fEmail">Email akun</label><input id="fEmail" type="email" required>
+      <div style="margin-top:16px"><button class="primary" style="width:100%" type="submit">Kirim kode</button></div></div>
+    <div data-step="2" class="hidden"><label for="fCode">Kode dari email</label><input id="fCode" inputmode="numeric" pattern="[0-9]{6,10}" autocomplete="one-time-code">
+      <div style="margin-top:16px"><button class="primary" style="width:100%" type="submit">Verifikasi kode</button></div></div>
+    <div data-step="3" class="hidden"><label for="fPass">Password baru (min. 8 karakter)</label><input id="fPass" type="password" minlength="8" autocomplete="new-password">
+      <div style="margin-top:16px"><button class="primary" style="width:100%" type="submit">Ganti password</button></div></div>
+  </form>
+  <div id="authMsg" class="msg" role="status"></div>
+</section>
+
+<main id="dashView" class="hidden">
+  <header class="top">
+    <div class="logo"><i></i></div><h1>Eyva Admin</h1>
+    <span class="spacer"></span>
+    <span class="muted small" id="who"></span>
+    <span class="muted small" id="updated"></span>
+    <button id="refreshBtn" type="button">Muat ulang</button>
+    <button id="logoutBtn" type="button">Keluar</button>
+  </header>
+  <div id="dashMsg" class="msg" role="status"></div>
+
+  <div id="dashBody" class="grid">
+    <div class="chips" id="system"></div>
+    <div class="grid stats" id="stats"></div>
+    <div class="grid two">
+      <div class="card"><h2>Sesi dan menit fokus, 14 hari terakhir</h2><div class="canvas"><canvas id="cDay" role="img" aria-label="Grafik sesi dan menit fokus per hari"></canvas></div></div>
+      <div class="card"><h2>Refleksi mood</h2><div class="canvas"><canvas id="cMood" role="img" aria-label="Grafik refleksi mood"></canvas></div><p id="moodEmpty" class="muted small hidden">Belum ada refleksi.</p></div>
+    </div>
+    <div class="card"><h2>Pengguna terbaru</h2><div class="tbl"><table id="tUsers"></table></div></div>
+    <div class="card"><h2>Sesi terbaru</h2><div class="tbl"><table id="tSessions"></table></div></div>
+  </div>
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const store = {
+    get(k) { try { return sessionStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { sessionStorage.setItem(k, v); } catch {} },
+    del(k) { try { sessionStorage.removeItem(k); } catch {} },
+  };
+  let charts = {}, timer = null, pendingEmail = "", resetToken = "", forgotStep = 1;
+
+  function msg(el, text, kind) { el.textContent = text || ""; el.className = "msg" + (text ? " " + kind : ""); }
+  const authMsg = (t, k = "err") => msg($("#authMsg"), t, k);
+
+  async function raw(path, opts = {}, token) {
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = "Bearer " + token;
+    const r = await fetch(path, { ...opts, headers });
+    let body = null;
+    try { body = await r.json(); } catch {}
+    return { ok: r.ok, status: r.status, body };
+  }
+  function errText(res) {
+    const d = res.body && res.body.detail;
+    if (typeof d === "string") return d;
+    if (Array.isArray(d) && d.length) return "Isian tidak valid: " + (d[0].loc || []).slice(-1)[0];
+    return "Terjadi kesalahan (" + res.status + ")";
+  }
+  const post = (p, data, token) => raw(p, { method: "POST", body: JSON.stringify(data) }, token);
+
+  function saveTokens(t) { store.set("at", t.access_token); store.set("rt", t.refresh_token); }
+  function clearTokens() { store.del("at"); store.del("rt"); }
+
+  async function refresh() {
+    const rt = store.get("rt");
+    if (!rt) return false;
+    const r = await post("/auth/refresh", { refresh_token: rt });
+    if (!r.ok) { clearTokens(); return false; }
+    saveTokens(r.body); return true;
+  }
+  async function authed(path, opts = {}) {
+    let r = await raw(path, opts, store.get("at"));
+    if (r.status === 401 && await refresh()) r = await raw(path, opts, store.get("at"));
+    return r;
+  }
+
+  function show(view) {
+    $("#authView").classList.toggle("hidden", view !== "auth");
+    $("#dashView").classList.toggle("hidden", view !== "dash");
+  }
+  function setTab(name) {
+    $$(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+    $$("[data-panel]").forEach(f => f.classList.toggle("hidden", f.dataset.panel !== name));
+    authMsg("");
+  }
+  function setForgotStep(n) {
+    forgotStep = n;
+    $$("#forgotForm [data-step]").forEach(d => d.classList.toggle("hidden", Number(d.dataset.step) !== n));
+  }
+  function busy(form, on) { $$("button", form).forEach(b => b.disabled = on); }
+
+  $$(".tabs button").forEach(b => b.addEventListener("click", () => { setTab(b.dataset.tab); if (b.dataset.tab === "forgot") setForgotStep(1); }));
+
+  async function enter(tokens) { saveTokens(tokens); show("dash"); await load(); }
+
+  $("#loginForm").addEventListener("submit", async e => {
+    e.preventDefault(); const f = e.target; busy(f, true); authMsg("");
+    const r = await post("/auth/login", { email: $("#lEmail").value, password: $("#lPass").value });
+    busy(f, false);
+    if (r.ok) { $("#lPass").value = ""; return enter(r.body); }
+    if (r.status === 403) { pendingEmail = $("#lEmail").value; setTab("verify"); authMsg(errText(r)); return; }
+    authMsg(errText(r));
+  });
+
+  $("#registerForm").addEventListener("submit", async e => {
+    e.preventDefault(); const f = e.target; busy(f, true); authMsg("");
+    const data = { email: $("#rEmail").value, password: $("#rPass").value };
+    if ($("#rUser").value) data.username = $("#rUser").value;
+    const r = await post("/auth/register", data);
+    busy(f, false);
+    if (!r.ok) return authMsg(errText(r));
+    if (!r.body.requires_verification) return enter(r.body.tokens);
+    pendingEmail = $("#rEmail").value; $("#rPass").value = "";
+    setTab("verify"); authMsg(r.body.message, "ok");
+  });
+
+  $("#verifyForm").addEventListener("submit", async e => {
+    e.preventDefault(); const f = e.target; busy(f, true); authMsg("");
+    const r = await post("/auth/verify-email", { email: pendingEmail, code: $("#vCode").value });
+    busy(f, false);
+    if (r.ok) { $("#vCode").value = ""; return enter(r.body); }
+    authMsg(errText(r));
+  });
+  $("#resendBtn").addEventListener("click", async () => {
+    const r = await post("/auth/resend-verification", { email: pendingEmail });
+    authMsg(r.ok ? r.body.message : errText(r), r.ok ? "ok" : "err");
+  });
+
+  $("#forgotForm").addEventListener("submit", async e => {
+    e.preventDefault(); const f = e.target; busy(f, true); authMsg("");
+    let r;
+    if (forgotStep === 1) {
+      pendingEmail = $("#fEmail").value;
+      r = await post("/auth/forgot-password", { email: pendingEmail });
+      if (r.ok) { setForgotStep(2); authMsg(r.body.message, "ok"); }
+    } else if (forgotStep === 2) {
+      r = await post("/auth/verify-reset-code", { email: pendingEmail, code: $("#fCode").value });
+      if (r.ok) { resetToken = r.body.reset_token; $("#fCode").value = ""; setForgotStep(3); }
+    } else {
+      r = await post("/auth/reset-password", { reset_token: resetToken, new_password: $("#fPass").value });
+      if (r.ok) { resetToken = ""; $("#fPass").value = ""; setTab("login"); setForgotStep(1); authMsg(r.body.message, "ok"); }
+    }
+    busy(f, false);
+    if (r && !r.ok) authMsg(errText(r));
+  });
+
+  $("#logoutBtn").addEventListener("click", async () => {
+    await authed("/auth/logout", { method: "POST" });
+    clearTokens(); clearInterval(timer); show("auth"); setTab("login");
+  });
+  $("#refreshBtn").addEventListener("click", () => load());
+
+  const fmtDate = s => { const d = new Date(s); return isNaN(d) ? "-" : d.toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }); };
+  const cell = (tr, text, tag = "td") => { const c = document.createElement(tag); c.textContent = text ?? "-"; tr.appendChild(c); };
+  function fillTable(el, head, rows) {
+    el.replaceChildren();
+    const h = el.createTHead().insertRow(); head.forEach(t => cell(h, t, "th"));
+    const b = el.createTBody();
+    if (!rows.length) { const r = b.insertRow(); const c = r.insertCell(); c.colSpan = head.length; c.className = "muted"; c.textContent = "Belum ada data."; return; }
+    rows.forEach(vals => { const r = b.insertRow(); vals.forEach(v => cell(r, v)); });
+  }
+  function stat(k, v) {
+    const d = document.createElement("div"); d.className = "card stat";
+    const a = document.createElement("div"); a.className = "v"; a.textContent = v;
+    const b = document.createElement("div"); b.className = "k"; b.textContent = k;
+    d.append(a, b); return d;
+  }
+  function chip(label, on) {
+    const s = document.createElement("span"); s.className = "chip";
+    const d = document.createElement("i"); d.className = "dot " + (on === true ? "on" : on === false ? "off" : "");
+    s.append(d, document.createTextNode(label)); return s;
+  }
+  const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  function drawCharts(sess) {
+    if (!window.Chart) return;
+    Object.values(charts).forEach(c => c.destroy()); charts = {};
+    const ink = cssVar("--muted"), grid = cssVar("--chart-grid"), brand = cssVar("--brand");
+    const days = sess.per_day;
+    charts.day = new Chart($("#cDay"), {
+      data: {
+        labels: days.map(d => d.date.slice(5)),
+        datasets: [
+          { type: "bar", label: "Sesi", data: days.map(d => d.sessions), backgroundColor: brand, borderRadius: 4, yAxisID: "y" },
+          { type: "line", label: "Menit fokus", data: days.map(d => d.focus_minutes), borderColor: cssVar("--warn"), backgroundColor: cssVar("--warn"), tension: .3, pointRadius: 2, yAxisID: "y1" },
+        ],
+      },
+      options: {
+        maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+        plugins: { legend: { labels: { color: ink } } },
+        scales: {
+          x: { ticks: { color: ink }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { color: ink, precision: 0 }, grid: { color: grid }, title: { display: true, text: "Sesi", color: ink } },
+          y1: { beginAtZero: true, position: "right", ticks: { color: ink }, grid: { display: false }, title: { display: true, text: "Menit", color: ink } },
+        },
+      },
+    });
+    const moods = Object.entries(sess.mood);
+    $("#moodEmpty").classList.toggle("hidden", moods.length > 0);
+    $("#cMood").parentElement.classList.toggle("hidden", moods.length === 0);
+    if (moods.length) {
+      const colors = { good: cssVar("--ok"), okay: cssVar("--warn"), tough: cssVar("--bad") };
+      charts.mood = new Chart($("#cMood"), {
+        type: "doughnut",
+        data: { labels: moods.map(m => m[0]), datasets: [{ data: moods.map(m => m[1]), backgroundColor: moods.map(m => colors[m[0]] || brand), borderWidth: 0 }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { color: ink } } } },
+      });
+    }
+  }
+
+  async function load() {
+    const dm = $("#dashMsg");
+    msg(dm, "");
+    const r = await authed("/admin/overview");
+    if (r.status === 401) { clearTokens(); show("auth"); setTab("login"); authMsg("Sesi login berakhir, silakan masuk lagi."); return; }
+    const me = await authed("/me");
+    $("#who").textContent = me.ok ? me.body.email : "";
+    if (r.status === 403) { $("#dashBody").classList.add("hidden"); msg(dm, "Akun ini bukan admin. Minta email Anda ditambahkan ke ADMIN_EMAILS.", "err"); return; }
+    if (!r.ok) { msg(dm, errText(r), "err"); return; }
+    $("#dashBody").classList.remove("hidden");
+    const d = r.body, u = d.users, s = d.sessions, sys = d.system;
+    const sysEl = $("#system"); sysEl.replaceChildren(
+      chip("Model " + (sys.inference_backend || "-") + (sys.device ? " (" + sys.device + ")" : ""), sys.inference_backend === "yolo"),
+      chip("Supabase", sys.persistence), chip("Auth", sys.auth_enabled), chip("LLM", sys.llm_enabled),
+      chip("Batas login " + sys.session_max_hours + " jam"), chip("v" + sys.version));
+    $("#stats").replaceChildren(
+      stat("Pengguna", u.total), stat("Baru 7 hari", u.new_7d), stat("Aktif 7 hari", u.active_7d),
+      stat("Belum verifikasi", u.unverified), stat("Total sesi", s.total), stat("Sesi berjalan", s.active_now),
+      stat("Jam fokus", s.total_focus_hours), stat("Rata-rata sesi (menit)", s.avg_session_minutes), stat("Alert", s.alerts));
+    fillTable($("#tUsers"), ["Email", "Login", "Daftar", "Terakhir masuk", "Sesi"],
+      u.recent.map(x => [x.email, x.provider, fmtDate(x.created_at), x.last_sign_in_at ? fmtDate(x.last_sign_in_at) : "-", x.sessions]));
+    fillTable($("#tSessions"), ["Judul", "Pengguna", "Status", "Mulai", "Menit fokus", "Alert"],
+      s.recent.map(x => [x.title, x.user_email, x.status, fmtDate(x.started_at), x.study_minutes, x.alerts]));
+    drawCharts(s);
+    $("#updated").textContent = "Diperbarui " + new Date(d.generated_at).toLocaleTimeString("id-ID");
+    clearInterval(timer); timer = setInterval(load, 30000);
+  }
+
+  async function boot() {
+    if (store.get("at") || store.get("rt")) { show("dash"); await load(); } else { show("auth"); }
+  }
+  window.addEventListener("load", boot);
+})();
+</script>
+</body>
+</html>

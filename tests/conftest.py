@@ -11,6 +11,10 @@ os.environ["SUPABASE_URL"] = ""
 os.environ["SUPABASE_SERVICE_KEY"] = ""
 os.environ["SUPABASE_ANON_KEY"] = ""
 os.environ["SESSION_MAX_HOURS"] = "12"
+# Tes tidak butuh model/torch. Diatur di sini (bukan di tiap berkas tes) karena Settings di-cache pada impor pertama `app`.
+os.environ.update(INFERENCE_BACKEND="mock", MOCK_SCENARIO="drowsy", EYE_CLOSURE_SECONDS="0.1", ALERT1_CONFIRM_SECONDS="0.3",
+                  ALERT2_RECHECK_SECONDS="0.3", ALERT_COOLDOWN_SECONDS="5")
+os.environ["ADMIN_EMAILS"] = ""
 
 import jwt  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     # Batas umur login sejak waktu login terakhir (jam). Lewat batas = harus login ulang. 0 = nonaktif.
     session_max_hours: float = 12.0
     password_min_length: int = 8
+    # Email admin (dipisah koma) yang boleh membuka /dashboard dan /admin/*.
+    admin_emails: str = ""
     enable_detect: bool = False  # POST /detect (alat kumpul data, hanya untuk lokal; jangan aktifkan di produksi publik)
     supabase_service_key: str = ""
     # LLM (rekomendasi Summary + tip Break). Default OpenRouter + DeepSeek varian gratis; slug model bisa berubah,
@@ -47,6 +49,10 @@ class Settings(BaseSettings):
     llm_total_seconds: float = 45.0  # batas seluruh percobaan (semua model + ulang)
     # Model cadangan (dipisah koma) yang dicoba OpenRouter bila model utama kena rate limit/gagal.
     llm_fallback_models: str = ""
+
+    @property
+    def admin_email_set(self) -> set[str]:
+        return {e.strip().lower() for e in self.admin_emails.split(",") if e.strip()}
 
     @property
     def cors_origin_list(self) -> list[str]:

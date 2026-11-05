@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, detect, predict, sessions, stats
+from app.api import accounts, admin, auth, detect, predict, sessions, stats
 from app.core.config import get_settings
 from app.db.repository import Persister, build_repository
 from app.services.inference import build_engine
@@ -32,6 +32,9 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(accounts.router)
+app.include_router(admin.router)
+app.include_router(admin.page_router)
 app.include_router(sessions.router)
 app.include_router(predict.router)
 app.include_router(stats.router)
@@ -58,4 +61,4 @@ def health():
 @app.get("/", include_in_schema=False)
 def root():
     """Halaman sambutan agar membuka URL backend di browser tidak tampil 404."""
-    return {"service": "Eyva Smart Study Assistant API", "status": "ok", "docs": "/docs", "health": "/health"}
+    return {"service": "Eyva Smart Study Assistant API", "status": "ok", "docs": "/docs", "health": "/health", "dashboard": "/dashboard"}
