@@ -26,6 +26,8 @@ class Repository(Protocol):
     def write(self, payload: dict[str, list[dict]]) -> None: ...
     def list_sessions(self, limit: int, user_id: str | None = None) -> list[dict]: ...
     def get_session_rows(self, session_id: str) -> dict | None: ...
+    def get_profile(self, user_id: str) -> dict | None: ...
+    def update_profile(self, user_id: str, changes: dict) -> dict: ...
 
 
 class NullRepository:
@@ -39,6 +41,12 @@ class NullRepository:
 
     def get_session_rows(self, session_id: str) -> dict | None:
         return None
+
+    def get_profile(self, user_id: str) -> dict | None:
+        return None
+
+    def update_profile(self, user_id: str, changes: dict) -> dict:
+        raise RuntimeError("persistensi tidak aktif")
 
 
 class SupabaseRepository:
@@ -80,6 +88,18 @@ class SupabaseRepository:
                   .eq("session_id", session_id).order("timestamp").execute()).data or []
         breaks = (self.client.table("breaks").select("*").eq("session_id", session_id)).execute().data or []
         return {"session": res.data[0], "blocks": blocks, "breaks": breaks, "events": events}
+
+    def get_profile(self, user_id: str) -> dict | None:
+        res = self.client.table("profiles").select("*").eq("id", user_id).limit(1).execute()
+        return res.data[0] if res.data else None
+
+    def update_profile(self, user_id: str, changes: dict) -> dict:
+        """Upsert: baris profil biasanya sudah dibuat trigger pendaftaran, tetapi akun lama mungkin belum punya."""
+        from datetime import datetime, timezone
+
+        row = {"id": user_id, **changes, "updated_at": datetime.now(timezone.utc).isoformat()}
+        res = self.client.table("profiles").upsert(row, on_conflict="id").execute()
+        return res.data[0] if res.data else row
 
 
 def build_repository(settings: Settings) -> Repository:
