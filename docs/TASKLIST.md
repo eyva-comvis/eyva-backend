@@ -7,15 +7,15 @@ Legenda: ✅ sudah dan diuji · 🟡 ada tetapi belum diuji penuh / masih sement
 
 ## Pembaruan terbaru (30 Okt, sore)
 
-- ✅ **Supabase:** proyek `loopa` dibuat, skema + RLS dijalankan, Site URL/Redirect URLs diatur (lihat `docs/SETUP_AUTH_SUPABASE.md`). ⬜ Masih perlu: aktifkan provider Google (Client ID/secret dari Anda), isi `SUPABASE_SERVICE_KEY` di Railway, dan env `NEXT_PUBLIC_SUPABASE_*` di Vercel.
+- ✅ **Supabase:** proyek `eyva` dibuat, skema + RLS dijalankan, Site URL/Redirect URLs diatur (lihat `docs/SETUP_AUTH_SUPABASE.md`). ⬜ Masih perlu: aktifkan provider Google (Client ID/secret dari Anda), isi `SUPABASE_SERVICE_KEY` di Railway, dan env `NEXT_PUBLIC_SUPABASE_*` di Vercel.
 - ✅ **Auth (kode):** login Google/email via Supabase, verifikasi JWT di backend, sesi/riwayat/statistik per pengguna, profil (username/avatar) di `/profile`. 🟡 Belum diuji dengan akun Google sungguhan (menunggu provider Google).
 - ✅ **UI mengikuti Figma:** Start Session + izin kamera, Focus Session (ring timer, Pause, panel musik), modal saran, **Mandatory Break**, **Session Wrap** (refleksi Good/Okay/Tough), History (tabel), Statistics (grafik, streak, insight), Login.
 - ✅ **Musik latar** generatif (4 soundtrack; sedikit lebih cerah saat ada indikasi kantuk; volume turun saat alert).
 - ✅ **Alat dataset webcam laptop:** `/collect`, `scripts/prepare_laptopcam.py`, opsi `--strong-aug` (lihat `docs/DATASET_LAPTOPCAM.md`). ⬜ Data webcam belum direkam; model belum dilatih ulang.
-- ✅ **Hosting dari GitHub** (`Admrlrdj/loopa`): lihat bagian 3 di `docs/SETUP_AUTH_SUPABASE.md`.
+- ✅ **Hosting dari GitHub** (`<org>/eyva-backend`): lihat bagian 3 di `docs/SETUP_AUTH_SUPABASE.md`.
 - ✅ Backend 50 tes lulus.
 
-Alamat produksi: web https://loopa-smart-study.vercel.app · backend https://loopa-backend-production-44f3.up.railway.app
+Alamat produksi: web https://<vercel-url> · backend https://<railway-url>
 
 ---
 
@@ -172,7 +172,7 @@ Alamat produksi: web https://loopa-smart-study.vercel.app · backend https://loo
 7. **Tentukan kriteria penerimaan** bersama tim dan tulis di `metadata/calibration.md`. Contoh usulan (bukan dari PRD): V1 = 0 alert; ≥ 80% eye closure di V2 terdeteksi; yawn ganda = 0 di V3; V6 = 0 alert.
 8. **Terapkan nilai:**
    - Lokal: ubah `backend/.env` (parameter env) dan konstanta di `temporal.py`.
-   - Produksi (Railway): `railway variables --service loopa-backend --set "EYE_CLOSURE_SECONDS=1.2"` (dst.), lalu `railway up --service loopa-backend --detach` bila ada perubahan kode.
+   - Produksi (Railway): `railway variables --service eyva-backend --set "EYE_CLOSURE_SECONDS=1.2"` (dst.), lalu `railway up --service eyva-backend --detach` bila ada perubahan kode.
 9. **Verifikasi di web asli** (langkah P5) dan ulangi replay dengan nilai baru. Simpan tabel sebelum/sesudah di `metadata/calibration.md`, lengkap dengan tanggal, laptop, orang, cahaya, dan jumlah video.
 10. **Batasan yang wajib dilaporkan:** jumlah pengguna dan video terbatas, domain dataset (kamera mobil) berbeda dari webcam laptop, dan hitungan blink dibatasi laju sampling.
 
@@ -183,7 +183,7 @@ Alamat produksi: web https://loopa-smart-study.vercel.app · backend https://loo
 **Langkah uji:**
 1. `backend\.venv\Scripts\python.exe -m pytest -q` (dari folder `backend`) harus lulus semua.
 2. **Replay:** jalankan `replay_video.py` pada V6. Periksa `no_face_frames` di ringkasan dan kolom `face`/`status` di timeline CSV. Hasil yang benar: status `UNCERTAIN` saat wajah hilang, `alerts` kosong, counter tidak melonjak.
-3. **Uji langsung di web** (https://loopa-smart-study.vercel.app, sesi 2 menit):
+3. **Uji langsung di web** (https://<vercel-url>, sesi 2 menit):
    - Tutup lensa atau keluar dari frame → badge berubah ke "Uncertain / no face detected", **tidak ada** alert, timer tetap berjalan.
    - Buka lagi → badge kembali ke Normal dalam beberapa detik.
    - Tutup mata **sambil** wajah terlihat → harus tetap terdeteksi mengantuk (jangan sampai dianggap no-face).
@@ -225,7 +225,7 @@ Batas minimum belajar 1 menit, jadi untuk uji cepat pakai belajar **1 menit** da
 6. Saat `00:00`: tampil "Break is over" dengan **Next study session** dan **Finish**. (Notifikasi browser hanya muncul bila izin Notification sudah diberikan; aplikasi belum memintanya.)
 7. **Verifikasi di backend** (ganti `<id>` dengan ID di URL halaman Summary):
    ```bash
-   curl https://loopa-backend-production-44f3.up.railway.app/sessions/<id>/summary
+   curl https://<railway-url>/sessions/<id>/summary
    ```
    `total_break_seconds` harus ±120 untuk istirahat penuh; lebih kecil bila memakai **End break** lebih awal. `events` memuat `BREAK_STARTED` dan `BREAK_COMPLETED`.
 8. **Klik Next study session:** kamera meminta izin lagi (tidak menyala otomatis), nomor blok menjadi 2, dan durasi belajar sama dengan konfigurasi sesi.
@@ -235,8 +235,8 @@ Batas minimum belajar 1 menit, jadi untuk uji cepat pakai belajar **1 menit** da
 ### P5. Uji end-to-end dan demo
 
 **A. Persiapan (sebelum demo/UAT)**
-1. Railway: status layanan *Success* dan saldo cukup (saldo free tinggal sedikit). Cek `https://loopa-backend-production-44f3.up.railway.app/health` → `status: ok`, `inference_backend: yolo`, `llm.enabled: true`.
-2. Vercel: buka https://loopa-smart-study.vercel.app, Home menampilkan "Backend status: connected".
+1. Railway: status layanan *Success* dan saldo cukup (saldo free tinggal sedikit). Cek `https://<railway-url>/health` → `status: ok`, `inference_backend: yolo`, `llm.enabled: true`.
+2. Vercel: buka https://<vercel-url>, Home menampilkan "Backend status: connected".
 3. Chrome, kamera, cahaya cukup, wajah di tengah, volume nyala, tab lain ditutup.
 4. Rekam layar sebagai cadangan. Siapkan rencana B: backend lokal `powershell -ExecutionPolicy Bypass -File start.ps1 -Scenario drowsy` (set `INFERENCE_BACKEND=mock` di `backend/.env`) agar alert muncul deterministik.
 
@@ -298,7 +298,7 @@ Batas minimum belajar 1 menit, jadi untuk uji cepat pakai belajar **1 menit** da
 1. Unggah `scripts/` dan `datasets/kantukv2_split/` ke Google Drive, buka `notebooks/kantukv2_audit_train_eval.ipynb` di Colab dengan runtime GPU.
 2. Jalankan training penuh (mis. 50 epoch, `imgsz` 640) dan evaluasi di test set.
 3. Bandingkan metrik dengan model CPU (mAP50 0,959). Bila lebih baik, salin ke `models/best.pt` dan `backend/models/best.pt`; ubah `YOLO_IMGSZ` sesuai ukuran training.
-4. Deploy ulang: `railway up --service loopa-backend --detach` dari folder `backend`.
+4. Deploy ulang: `railway up --service eyva-backend --detach` dari folder `backend`.
 
 **P6.5 Kunci versi library**
 ```bash
@@ -347,6 +347,6 @@ backend\.venv\Scripts\python.exe -m pytest -q          # jalankan dari folder ba
 backend\.venv\Scripts\python.exe -I scripts/replay_video.py <video.mp4> --truth <truth.csv> --out metadata/video/<nama>
 # deploy
 vercel deploy --prod --yes                               # dari folder frontend
-railway up --service loopa-backend --detach              # dari folder backend
-railway variables --service loopa-backend --set "NAMA=nilai"
+railway up --service eyva-backend --detach              # dari folder backend
+railway variables --service eyva-backend --set "NAMA=nilai"
 ```
