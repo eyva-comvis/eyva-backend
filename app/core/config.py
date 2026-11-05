@@ -31,7 +31,11 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_jwt_secret: str = ""  # hanya untuk proyek lama (HS256); proyek baru memakai JWKS dari SUPABASE_URL
     supabase_jwt_audience: str = "authenticated"
-    auth_required: bool = False  # true = semua endpoint sesi butuh login
+    # Kunci publik (anon/publishable) untuk memanggil Supabase Auth (lupa password). Kosong = pakai service key.
+    supabase_anon_key: str = ""
+    # Batas umur login sejak waktu login terakhir (jam). Lewat batas = harus login ulang. 0 = nonaktif.
+    session_max_hours: float = 12.0
+    password_min_length: int = 8
     enable_detect: bool = False  # POST /detect (alat kumpul data, hanya untuk lokal; jangan aktifkan di produksi publik)
     supabase_service_key: str = ""
     # LLM (rekomendasi Summary + tip Break). Default OpenRouter + DeepSeek varian gratis; slug model bisa berubah,

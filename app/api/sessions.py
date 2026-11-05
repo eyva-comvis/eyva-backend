@@ -28,9 +28,10 @@ def _close_block(s: Session, block: Block, status: str, reason: str) -> None:
 @router.post("", response_model=SessionOut, status_code=201)
 async def create_session(cfg: SessionConfig, request: Request):
     user = current_user(request)
+    assert user is not None  # attach_user sudah menolak permintaan tanpa login
     s = get_store(request).create(
         cfg.configured_study_seconds, cfg.configured_break_seconds, get_settings(),
-        user_id=user.id if user else None, title=cfg.title.strip() or "Study Session",
+        user_id=user.id, title=cfg.title.strip() or "Study Session",
         mandatory_break=cfg.mandatory_break, soundtrack=cfg.soundtrack,
     )
     persist(request, s)
@@ -140,7 +141,7 @@ async def end_session(session_id: str, request: Request, body: EndRequest | None
 
 @router.get("", response_model=SessionListOut)
 async def list_sessions(request: Request, limit: int = Query(20, ge=1, le=100), offset: int = Query(0, ge=0)):
-    """Riwayat sesi (FR-16), terbaru dulu. Belum ada autentikasi: daftar ini global."""
+    """Riwayat sesi (FR-16), terbaru dulu. Hanya sesi milik pengguna yang login."""
     return SessionListOut(items=await list_items(request.app, limit, offset, current_user(request)), limit=limit, offset=offset)
 
 

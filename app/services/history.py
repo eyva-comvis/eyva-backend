@@ -31,8 +31,8 @@ def _item_from_row(r: dict) -> SessionListItem:
 
 
 def _visible(owner_id: str | None, user: User | None) -> bool:
-    """Riwayat hanya berisi sesi milik pengguna saat ini; tamu hanya melihat sesi tamu."""
-    return owner_id == (user.id if user else None)
+    """Riwayat hanya berisi sesi milik pengguna saat ini."""
+    return owner_id is not None and user is not None and owner_id == user.id
 
 
 async def list_items(app: FastAPI, limit: int, offset: int, user: User | None = None) -> list[SessionListItem]:
@@ -66,7 +66,7 @@ async def list_items(app: FastAPI, limit: int, offset: int, user: User | None = 
 async def load_summary(app: FastAPI, session_id: str, user: User | None = None) -> SummaryOut | None:
     s = app.state.store.get(session_id)
     if s is not None:
-        return build_summary(s) if (s.user_id is None or (user is not None and user.id == s.user_id)) else None
+        return build_summary(s) if (user is not None and s.user_id == user.id) else None
 
     repo = app.state.persister.repo
     if not repo.enabled:
@@ -81,7 +81,7 @@ async def load_summary(app: FastAPI, session_id: str, user: User | None = None) 
 
     r, blocks = data["session"], data["blocks"]
     owner = r.get("user_id")
-    if owner is not None and (user is None or user.id != owner):
+    if owner is None or user is None or user.id != owner:
         return None
     events = [{k: v for k, v in e.items() if k != "session_id"} for e in data["events"]]
     return SummaryOut(

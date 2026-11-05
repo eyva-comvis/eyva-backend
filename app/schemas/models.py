@@ -183,8 +183,8 @@ class StatsOut(BaseModel):
 
 
 class MeOut(BaseModel):
-    authenticated: bool
-    user_id: str | None = None
+    authenticated: bool = True
+    user_id: str
     email: str | None = None
-    auth_enabled: bool
-    auth_required: bool
+    auth_enabled: bool = True
+    session_expires_at: datetime | None = None  # batas login; setelah ini wajib login ulang

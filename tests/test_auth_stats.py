@@ -1,8 +1,6 @@
-"""Tes autentikasi (JWT Supabase HS256), kepemilikan sesi, refleksi, pause, dan statistik."""
-import time
+"""Tes autentikasi wajib (JWT Supabase HS256), umur login, kepemilikan sesi, refleksi, pause, dan statistik."""
 from datetime import datetime, timedelta, timezone
 
-import jwt
 import pytest
 from fastapi.testclient import TestClient
 
@@ -10,21 +8,20 @@ from app.api.stats import compute_stats
 from app.core.config import get_settings
 from app.main import app
 from app.schemas.models import SessionListItem
+from tests.conftest import SECRET, make_token
 
-SECRET = "test-secret-with-enough-length-for-hs256!"
+ANON = {"Authorization": ""}  # menimpa token default TestClient = tanpa login
 CFG = {"configured_study_seconds": 60, "configured_break_seconds": 60}
 
 
-def token(sub: str, *, exp_in: int = 3600, aud: str = "authenticated", secret: str = SECRET) -> dict:
-    t = jwt.encode({"sub": sub, "email": f"{sub}@example.com", "aud": aud, "exp": int(time.time()) + exp_in}, secret, algorithm="HS256")
-    return {"Authorization": f"Bearer {t}"}
+def token(sub: str, **kw) -> dict:
+    return {"Authorization": f"Bearer {make_token(sub, **kw)}"}
 
 
 @pytest.fixture
 def client(monkeypatch):
     s = get_settings()
     monkeypatch.setattr(s, "supabase_jwt_secret", SECRET)
-    monkeypatch.setattr(s, "auth_required", False)
     with TestClient(app) as c:
         yield c
 
@@ -36,9 +33,10 @@ def make(c, headers=None, **extra) -> str:
 
 
 def test_me_reports_identity(client):
-    assert client.get("/me").json()["authenticated"] is False
+    assert client.get("/me", headers=ANON).status_code == 401
     r = client.get("/me", headers=token("user-a")).json()
     assert r["authenticated"] and r["user_id"] == "user-a" and r["auth_enabled"]
+    assert r["session_expires_at"] is None  # token uji tanpa klaim amr
 
 
 def test_invalid_expired_or_wrong_audience_tokens_are_rejected(client):
@@ -46,32 +44,53 @@ def test_invalid_expired_or_wrong_audience_tokens_are_rejected(client):
         assert client.get("/me", headers=h).status_code == 401
 
 
-def test_auth_required_blocks_anonymous(client, monkeypatch):
-    monkeypatch.setattr(get_settings(), "auth_required", True)
-    assert client.post("/sessions", json=CFG).status_code == 401
-    assert client.post("/sessions", json=CFG, headers=token("u1")).status_code == 201
+def test_login_is_required_everywhere_no_guest_mode(client):
+    sid = make(client, token("u1"))
+    for method, url in (("post", "/sessions"), ("get", "/sessions"), ("get", "/stats?days=7"), ("get", "/me"),
+                        ("post", f"/sessions/{sid}/blocks"), ("get", f"/sessions/{sid}/summary"),
+                        ("post", f"/sessions/{sid}/predict")):
+        r = getattr(client, method)(url, headers=ANON, **({"json": CFG} if url == "/sessions" and method == "post" else {}))
+        assert r.status_code == 401, (method, url, r.status_code)
+    assert client.get("/health", headers=ANON).status_code == 200  # health tetap publik
+
+
+def test_auth_not_configured_returns_503(client, monkeypatch):
+    s = get_settings()
+    monkeypatch.setattr(s, "supabase_jwt_secret", "")
+    monkeypatch.setattr(s, "supabase_url", "")
+    assert client.get("/me").status_code == 503
+
+
+def test_login_session_expires_after_max_age_even_if_token_is_fresh(client):
+    ok = token("age", login_ago=3600)  # login 1 jam lalu, batas 12 jam
+    old = token("age", login_ago=13 * 3600)  # access token baru direfresh, tetapi login sudah 13 jam lalu
+    r = client.get("/me", headers=ok)
+    assert r.status_code == 200 and r.json()["session_expires_at"]
+    r = client.get("/me", headers=old)
+    assert r.status_code == 401 and "login ulang" in r.json()["detail"]
+
+
+def test_login_age_limit_can_be_disabled(client, monkeypatch):
+    monkeypatch.setattr(get_settings(), "session_max_hours", 0)
+    assert client.get("/me", headers=token("age", login_ago=999 * 3600)).status_code == 200
 
 
 def test_sessions_are_private_to_their_owner(client):
     a, b = token("owner-a"), token("owner-b")
     sid = make(client, a, title="Thesis")
     assert client.post(f"/sessions/{sid}/blocks", headers=a).status_code == 201
-    for h in ({}, b):  # tamu dan pengguna lain: 404, bukan 403
+    for h in (b,):  # pengguna lain: 404, bukan 403
         assert client.post(f"/sessions/{sid}/blocks", headers=h).status_code == 404
         assert client.get(f"/sessions/{sid}/summary", headers=h).status_code == 404
         assert client.post(f"/sessions/{sid}/end", headers=h).status_code == 404
     assert client.get(f"/sessions/{sid}/summary", headers=a).json()["title"] == "Thesis"
 
 
-def test_guest_sessions_stay_open_and_history_is_per_user(client):
-    guest = make(client)
+def test_history_is_per_user(client):
     mine = make(client, token("hist-a"))
     theirs = make(client, token("hist-b"))
     ids_a = {i["id"] for i in client.get("/sessions?limit=100", headers=token("hist-a")).json()["items"]}
-    ids_guest = {i["id"] for i in client.get("/sessions?limit=100").json()["items"]}
-    assert mine in ids_a and theirs not in ids_a and guest not in ids_a
-    assert guest in ids_guest and mine not in ids_guest
-    assert client.post(f"/sessions/{guest}/blocks").status_code == 201  # tamu tetap bisa
+    assert mine in ids_a and theirs not in ids_a
 
 
 def test_title_validation_and_defaults(client):
@@ -94,7 +113,7 @@ def test_reflection_is_saved_and_validated(client):
 
 
 def test_manual_pause_then_resume(client):
-    sid = make(client)
+    sid = make(client)  # memakai token default TestClient
     bid = client.post(f"/sessions/{sid}/blocks").json()["id"]
     assert client.post(f"/sessions/{sid}/blocks/{bid}/pause").json()["timer_paused"] is True
     assert client.post(f"/sessions/{sid}/blocks/{bid}/resume").json()["timer_paused"] is False
@@ -128,7 +147,7 @@ def test_stats_endpoint_is_per_user(client):
     mine = client.get("/stats?days=7", headers=h).json()
     assert mine["sessions"] == 1 and len(mine["per_day"]) == 7
     assert client.get("/stats?days=7", headers=token("nobody")).json()["sessions"] == 0
-    assert client.get("/stats?days=3").status_code == 422
+    assert client.get("/stats?days=3", headers=token("nobody")).status_code == 422
 
 
 def test_detect_endpoint_is_disabled_by_default_and_returns_boxes_when_enabled(client, monkeypatch):

@@ -88,7 +88,7 @@ class Session:
     settings: Settings
     status: str = "ACTIVE"  # ACTIVE | ENDED
     end_reason: str | None = None
-    user_id: str | None = None  # pemilik (Supabase auth.users.id); None = tamu
+    user_id: str | None = None  # pemilik (Supabase auth.users.id); wajib terisi untuk sesi baru
     title: str = "Study Session"
     mandatory_break: bool = True
     soundtrack: str | None = None

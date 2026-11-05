@@ -25,8 +25,8 @@ def persist(request: Request, s: Session) -> None:
 
 
 def owns(owner_id: str | None, user: User | None) -> bool:
-    """Sesi tamu (tanpa pemilik) terbuka bagi siapa pun yang tahu ID-nya; sesi milik pengguna hanya untuk pemiliknya."""
-    return owner_id is None or (user is not None and user.id == owner_id)
+    """Sesi hanya dapat diakses pemiliknya. Sesi tanpa pemilik (sisa mode tamu lama) tidak dapat diakses siapa pun."""
+    return owner_id is not None and user is not None and user.id == owner_id
 
 
 _load_lock = asyncio.Lock()

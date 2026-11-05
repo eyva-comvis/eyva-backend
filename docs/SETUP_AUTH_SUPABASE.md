@@ -105,7 +105,8 @@ Railway (Variables):
 |---|---|
 | `SUPABASE_URL` | `https://<ref>.supabase.co` (token diverifikasi otomatis lewat JWKS) |
 | `SUPABASE_SERVICE_KEY` | Secret key (service_role), isi lewat dashboard |
-| `AUTH_REQUIRED` | `false` (tamu boleh) atau `true` (wajib login) |
+| `SUPABASE_ANON_KEY` | Publishable key (untuk alur lupa password; bila kosong dipakai service key) |
+| `SESSION_MAX_HOURS` | Batas umur login dalam jam (default `12`); lewat batas, pengguna harus login ulang |
 | `CORS_ORIGINS` | `https://<vercel-url>,http://localhost:3000` |
 
 Vercel (Environment Variables, Production): `NEXT_PUBLIC_SUPABASE_URL` = `https://<ref>.supabase.co`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` = publishable key. Lalu **Redeploy**.
@@ -119,6 +120,26 @@ Verifikasi:
 ## Perilaku akun
 
 - Pengguna masuk: sesi, riwayat, statistik, dan refleksi tersimpan per akun (`sessions.user_id`). Sesi orang lain tidak bisa diakses (404).
-- Tamu: sesi berjalan normal tetapi tidak muncul di riwayat/statistik bila login aktif di backend.
+- Login wajib untuk semua endpoint (tidak ada mode tamu). Token diverifikasi tiap request; login dibatasi `SESSION_MAX_HOURS` sejak login terakhir walau refresh token masih ada. `GET /me` mengembalikan `session_expires_at`.
+- Logout: `POST /auth/logout` mencabut sesi di Supabase dan token langsung ditolak backend.
 - Username dan avatar diedit di `/profile` (tabel `profiles`, dilindungi RLS; username 3–24 karakter `A-Za-z0-9_.` dan unik).
 - Setiap push ke `main` men-deploy otomatis ke Railway/Vercel. Sesi aktif dimuat ulang dari Supabase setelah redeploy (butuh `SUPABASE_SERVICE_KEY`).
+
+## Lupa password (email + password)
+
+Alur: halaman lupa password → input email → input kode verifikasi dari email → halaman reset password. Akun Google tidak memakai alur ini.
+
+Endpoint backend (semua publik kecuali logout):
+
+| Langkah | Endpoint | Body | Hasil |
+|---|---|---|---|
+| 1 | `POST /auth/forgot-password` | `{ "email" }` | Kode dikirim ke email; jawaban selalu sama (tidak membocorkan email terdaftar) |
+| 2 | `POST /auth/verify-reset-code` | `{ "email", "code" }` | `{ "reset_token" }` atau 400 bila kode salah/kedaluwarsa |
+| 3 | `POST /auth/reset-password` | `{ "reset_token", "new_password" }` | Password diganti, semua sesi akun dicabut; login ulang |
+| – | `POST /auth/logout?scope=local\|global\|others` | header Bearer | 204 |
+
+Setup di Supabase (sekali):
+1. **Authentication → Sign In / Providers → Email**: aktifkan.
+2. **Authentication → Email Templates → Reset Password**: ganti isi agar menampilkan kode, mis. `<p>Kode reset password Eyva: <b>{{ .Token }}</b></p>` (default memakai link, bukan kode).
+3. **Authentication → SMTP Settings**: pasang SMTP sendiri (mis. Resend/Brevo/Gmail). SMTP bawaan Supabase hanya mengirim ke anggota tim dan dibatasi beberapa email per jam.
+4. Railway: tambahkan `SUPABASE_ANON_KEY` (publishable key).

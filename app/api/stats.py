@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, Query, Request
 
 from app.api.deps import current_user
-from app.core.auth import attach_user, auth_configured
+from app.core.auth import attach_user
 from app.core.config import get_settings
 from app.schemas.models import DayStat, MeOut, SessionListItem, StatsOut
 from app.services.history import list_items
@@ -86,5 +86,4 @@ async def stats(request: Request, days: int = Query(14, ge=7, le=90)):
 @router.get("/me", response_model=MeOut)
 async def me(request: Request):
     u, s = current_user(request), get_settings()
-    return MeOut(authenticated=u is not None, user_id=u.id if u else None, email=u.email if u else None,
-                 auth_enabled=auth_configured(s), auth_required=s.auth_required)
+    return MeOut(user_id=u.id, email=u.email, session_expires_at=u.session_expires_at(s))
