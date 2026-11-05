@@ -1,0 +1,80 @@
+{
+  "url": "https://universe.roboflow.com/testproject-8jvqn/kantukv2",
+  "version": "2",
+  "license": "CC BY 4.0 (resplit)",
+  "audited_on": "2026-10-30",
+  "classes": [
+    "eye_closed",
+    "eye_open",
+    "head_dropped",
+    "head_straight",
+    "no_yawn",
+    "yawn"
+  ],
+  "missing_expected_classes": [],
+  "unexpected_classes": [],
+  "splits": {
+    "train": {
+      "images": 3069,
+      "annotations": 9203,
+      "per_class": {
+        "head_straight": 2184,
+        "eye_open": 1640,
+        "yawn": 1325,
+        "eye_closed": 1428,
+        "no_yawn": 1742,
+        "head_dropped": 884
+      },
+      "images_without_label_file": 0,
+      "empty_label_files": 1,
+      "invalid_label_files": 0,
+      "corrupt_images": 0
+    },
+    "valid": {
+      "images": 577,
+      "annotations": 1731,
+      "per_class": {
+        "head_straight": 400,
+        "eye_open": 315,
+        "yawn": 233,
+        "eye_closed": 262,
+        "no_yawn": 344,
+        "head_dropped": 177
+      },
+      "images_without_label_file": 0,
+      "empty_label_files": 0,
+      "invalid_label_files": 0,
+      "corrupt_images": 0
+    },
+    "test": {
+      "images": 195,
+      "annotations": 585,
+      "per_class": {
+        "head_dropped": 73,
+        "eye_closed": 83,
+        "no_yawn": 115,
+        "head_straight": 123,
+        "eye_open": 111,
+        "yawn": 80
+      },
+      "images_without_label_file": 0,
+      "empty_label_files": 0,
+      "invalid_label_files": 0,
+      "corrupt_images": 0
+    }
+  },
+  "issues": [],
+  "duplicates_within_split": 0,
+  "cross_split_leakage_exact": 0,
+  "leakage_examples": [],
+  "note": "Hash hanya mendeteksi duplikat PERSIS. Frame berurutan/subjek sama tetap perlu dicek visual (Roboflow augmentasi dapat membuat varian mirip di split berbeda).",
+  "total_per_class": {
+    "head_straight": 2707,
+    "eye_open": 2066,
+    "yawn": 1638,
+    "eye_closed": 1773,
+    "no_yawn": 2201,
+    "head_dropped": 1134
+  },
+  "imbalance_ratio_max_min": 2.39
+}

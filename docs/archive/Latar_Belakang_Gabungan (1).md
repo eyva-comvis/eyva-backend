@@ -1,0 +1,45 @@
+# Latar Belakang — SMART STUDY ASSISTANT
+
+Aktivitas belajar maupun pengerjaan proyek menggunakan laptop dalam waktu yang cukup lama membutuhkan kemampuan untuk mempertahankan konsentrasi dan kewaspadaan secara konsisten. Namun, penggunaan komputer dalam durasi panjang dapat menimbulkan penurunan konsentrasi dan kelelahan mental tanpa disadari oleh penggunanya, karena kondisi tersebut umumnya terjadi secara bertahap. Hal ini menjadi semakin relevan pada aktivitas belajar mandiri maupun pengerjaan proyek secara individu, karena tidak selalu ada pihak lain yang dapat mengamati atau mengingatkan pengguna ketika performanya mulai menurun. Kondisi kelelahan dan penurunan fokus dapat ditunjukkan melalui perubahan karakteristik visual, seperti meningkatnya frekuensi kedipan mata, mata yang lebih lama tertutup, perubahan ekspresi wajah, menguap, serta perubahan orientasi kepala. Penelitian mengenai pengukuran kelelahan mental menunjukkan bahwa karakteristik mata dapat digunakan sebagai indikator objektif untuk mengamati kondisi kelelahan secara berkelanjutan (Bafna & Hansen, 2021).
+
+Perkembangan *computer vision* memungkinkan kondisi tersebut dianalisis secara non-invasif, tanpa memerlukan perangkat sensor fisiologis yang harus dikenakan pada tubuh pengguna. Kamera atau webcam yang umumnya sudah tersedia pada laptop dapat digunakan untuk menangkap citra wajah, kemudian informasi seperti kondisi mata, pergerakan mulut, ekspresi wajah, dan orientasi kepala dapat diekstraksi untuk memperkirakan kondisi pengguna. Penelitian Ji et al. (2025) menunjukkan bahwa *computer vision* yang dikombinasikan dengan *machine learning* dapat digunakan untuk mendeteksi kondisi *mental fatigue* berdasarkan karakteristik wajah tanpa memerlukan sensor tambahan yang dikenakan pada tubuh pengguna.
+
+Pendekatan berbasis *computer vision* juga memiliki potensi besar dalam konteks pembelajaran maupun pengerjaan tugas mandiri. Pada konteks pembelajaran daring, Rahajoe et al. (2023) mengembangkan sistem *real-time drowsy face detection* berbasis webcam untuk mahasiswa, dengan memanfaatkan indikator mata dan mulut (*Eye Aspect Ratio* dan *Mouth Aspect Ratio*) serta algoritma *Random Forest* dan *Decision Tree* untuk mengklasifikasikan kondisi kantuk secara *real-time*. Selain kondisi kantuk semata, kondisi perhatian pengguna juga cenderung dipengaruhi oleh lebih dari satu indikator sekaligus. Kaewkaisorn et al. (2024) menunjukkan hal ini dengan menggabungkan beberapa indikator visual — *distraction*, *drowsiness*, dan *emotion* — untuk menentukan apakah pengguna berada dalam kondisi *focused* atau *not focused*, dan memperoleh akurasi hingga 90,2% pada data pengujian. Temuan-temuan ini menunjukkan bahwa kondisi kelelahan dan konsentrasi pengguna dapat dianalisis melalui kombinasi beberapa karakteristik wajah sekaligus, bukan hanya berdasarkan satu indikator tunggal.
+
+Meskipun demikian, sebagian besar sistem deteksi kelelahan atau perhatian berbasis *computer vision* masih berhenti pada tahap klasifikasi status pengguna, misalnya menentukan apakah seseorang sedang mengantuk, fokus, atau tidak fokus. Sistem semacam itu belum tentu membantu pengguna menentukan tindakan yang harus dilakukan setelah kondisi tersebut terdeteksi. Oleh karena itu, diperlukan pendekatan yang tidak berhenti pada proses deteksi, tetapi juga mampu memberikan respons atau intervensi berdasarkan kondisi pengguna, sekaligus membantu pengguna memahami pola konsentrasi dan kebiasaannya dari waktu ke waktu. Konsep ini sejalan dengan perkembangan sistem berbasis AI yang mulai menggabungkan *analytics* dengan umpan balik yang lebih personal. Penelitian mengenai *AI-driven personalized feedback* menunjukkan bahwa umpan balik yang disesuaikan dengan kondisi dan kebutuhan pengguna dapat berkaitan dengan peningkatan *self-efficacy*, pencapaian tujuan, dan *learning engagement* (Xu et al., 2025).
+
+Berdasarkan permasalahan tersebut, dikembangkan **SMART STUDY ASSISTANT: Sistem Deteksi Kelelahan Belajar dan Manajemen Waktu Istirahat Berbasis Web**. Sistem ini dirancang sebagai asisten yang memanfaatkan webcam sebagai satu-satunya sumber data visual, tanpa memerlukan perangkat *wearable* tambahan, untuk menganalisis kondisi pengguna selama beraktivitas di depan laptop — baik dalam konteks belajar maupun pengerjaan proyek secara umum. Sistem akan memproses informasi visual seperti pergerakan dan bentuk mata, frekuensi kedipan, durasi mata tertutup, indikasi menguap, ekspresi wajah, serta orientasi kepala untuk mengidentifikasi indikasi kelelahan dan penurunan konsentrasi.
+
+Ketika sistem mendeteksi bahwa pengguna mulai menunjukkan tanda-tanda kelelahan atau kehilangan konsentrasi, sistem tidak hanya memberikan peringatan, tetapi juga memberikan saran aktivitas istirahat ringan yang dapat dilakukan tanpa perlu meninggalkan area kerja, seperti menggerakkan kepala, memutar tubuh ke kanan dan ke kiri, atau melakukan peregangan tangan ringan yang masih dapat dijangkau oleh webcam. Setelah pengguna menyelesaikan sesinya, sistem akan menyajikan hasil *analytics* dari sesi tersebut, seperti jumlah indikasi menguap, frekuensi atau durasi mata dalam kondisi lelah, estimasi durasi konsentrasi pengguna dalam satuan menit, serta saran berbasis AI mengenai cara meningkatkan kualitas belajar atau pengerjaan proyek pada sesi berikutnya. Dengan pendekatan tersebut, SMART STUDY ASSISTANT diharapkan dapat berperan sebagai *personal assistant* yang tidak hanya mendeteksi kelelahan dan penurunan konsentrasi pengguna, tetapi juga membantu pengguna mengambil tindakan yang tepat dan membangun pola aktivitas serta istirahat yang lebih teratur.
+
+---
+
+## Rekomendasi 5 Jurnal Utama
+
+Dipilih agar masing-masing mewakili satu komponen utama sistem: fondasi teori kelelahan mata, metode *computer vision*-nya, konteks pembelajaran/webcam yang paling mirip proyekmu, pendekatan multi-indikator untuk klasifikasi fokus, dan bagian *analytics + AI feedback* di akhir sesi.
+
+| # | Komponen yang didukung | Jurnal |
+|---|---|---|
+| 1 | Fondasi: mata sebagai indikator kelelahan mental | Bafna, T., & Hansen, J. P. (2021). *Mental fatigue measurement using eye metrics: A systematic literature review.* Psychophysiology, 58(6). https://doi.org/10.1111/psyp.13828 |
+| 2 | Metode CV untuk deteksi *mental fatigue* tanpa sensor | Ji, Z., Xie, X., Jiang, E., Wang, Y., Min, B., Yang, S., Chen, Y., & Pons, D. (2025). *Integrating DRN-RF with computer vision for detection of control room operator's mental fatigue.* PLOS ONE. https://doi.org/10.1371/journal.pone.0320780 |
+| 3 | Deteksi kantuk real-time berbasis webcam **di konteks pembelajaran** (paling dekat dengan proyekmu) | Rahajoe, A. D., Subekti, M. R. A., & Suriansyah, M. (2023). *Real-time drowsy face detection for online learning based on random forest and decision tree algorithms.* Jurnal Teknik Informatika (JUTIF), 4(6). https://doi.org/10.52436/1.jutif.2023.4.6.1554 |
+| 4 | Klasifikasi multi-indikator (fokus/tidak fokus) — mendukung tahap "deteksi kelelahan & tidak konsentrasi" di sistemmu | Kaewkaisorn, K., Pintong, K., Bunyang, S., Tansawat, T., & Siriborvornratanakul, T. (2024). *Student attentiveness analysis in virtual classroom using distraction, drowsiness and emotion detection.* Discover Education, 3. https://doi.org/10.1007/s44217-024-00117-7 |
+| 5 | Umpan balik personal berbasis AI — mendukung fitur *analytics* & saran AI di akhir sesi | Xu, Q., Liu, Y., & Li, X. (2025). *Unlocking student potential: How AI-driven personalized feedback shapes goal achievement, self-efficacy, and learning engagement through a self-determination lens.* Learning and Motivation, 91. https://doi.org/10.1016/j.lmot.2025.102138 |
+
+---
+
+## Daftar Pustaka (APA 7th)
+
+Bafna, T., & Hansen, J. P. (2021). Mental fatigue measurement using eye metrics: A systematic literature review. *Psychophysiology, 58*(6). https://doi.org/10.1111/psyp.13828
+
+Ji, Z., Xie, X., Jiang, E., Wang, Y., Min, B., Yang, S., Chen, Y., & Pons, D. (2025). Integrating DRN-RF with computer vision for detection of control room operator's mental fatigue. *PLOS ONE*. https://doi.org/10.1371/journal.pone.0320780
+
+Kaewkaisorn, K., Pintong, K., Bunyang, S., Tansawat, T., & Siriborvornratanakul, T. (2024). Student attentiveness analysis in virtual classroom using distraction, drowsiness and emotion detection. *Discover Education, 3*. https://doi.org/10.1007/s44217-024-00117-7
+
+Rahajoe, A. D., Subekti, M. R. A., & Suriansyah, M. (2023). Real-time drowsy face detection for online learning based on random forest and decision tree algorithms. *Jurnal Teknik Informatika (JUTIF), 4*(6). https://doi.org/10.52436/1.jutif.2023.4.6.1554
+
+Xu, Q., Liu, Y., & Li, X. (2025). Unlocking student potential: How AI-driven personalized feedback shapes goal achievement, self-efficacy, and learning engagement through a self-determination lens. *Learning and Motivation, 91*. https://doi.org/10.1016/j.lmot.2025.102138
+
+---
+
+*Catatan: saya tidak memiliki akses pencarian untuk memverifikasi ulang DOI/detail jurnal di atas — silakan cek kembali kesesuaiannya dengan sumber aslinya sebelum dikutip di skripsi/laporan.*

@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
+.railway
+# model & artefak training besar (best.pt untuk deploy tetap di-commit)
+models/*
+!models/best.pt
+datasets/
+logs/
+_legacy/
+*.pdf
+ml/metadata/synthetic_*
+ml/metadata/replay_synthetic_*
+ml/metadata/check_sample.jpg

@@ -1,0 +1,26 @@
+{
+  "trained_on": "2026-10-30T16:22:20",
+  "dataset": "kantukv2 (satu-satunya)",
+  "data_yaml": "datasets\\kantukv2_split\\data.yaml",
+  "base_model": "yolo11n.pt",
+  "ultralytics": "8.4.192",
+  "args": {
+    "model": "yolo11n.pt",
+    "epochs": 10,
+    "imgsz": 416,
+    "batch": 16,
+    "device": "cpu",
+    "patience": 15,
+    "name": "devtest_yolo11n",
+    "seed": 0,
+    "data": "datasets\\kantukv2_split\\data.yaml"
+  },
+  "val_metrics": {
+    "metrics/precision(B)": 0.9501191685374789,
+    "metrics/recall(B)": 0.9384780922476331,
+    "metrics/mAP50(B)": 0.9808816149127265,
+    "metrics/mAP50-95(B)": 0.6764880363767981,
+    "fitness": 0.6764880363767981
+  },
+  "weights": "models/best.pt"
+}

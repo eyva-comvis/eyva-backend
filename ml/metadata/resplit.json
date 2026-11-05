@@ -1,0 +1,16 @@
+{
+  "source": "datasets\\kantukv2",
+  "seed": 0,
+  "method": "group-aware split by source key (nama file)",
+  "groups": 2236,
+  "images": {
+    "train": 3069,
+    "valid": 577,
+    "test": 195
+  },
+  "ratios_target": {
+    "valid": 0.15,
+    "test": 0.05
+  },
+  "note": "Hanya gambar kantukv2 v2 (train+test bawaan digabung). Kunci kelompok adalah perkiraan dari nama file."
+}

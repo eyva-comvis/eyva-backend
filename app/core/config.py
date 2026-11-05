@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     cors_origin_regex: str = r"https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$"
 
     inference_backend: str = "mock"  # mock | yolo
-    model_path: str = "../models/best.pt"
+    model_path: str = "models/best.pt"
     mock_scenario: str = "normal"  # normal | drowsy
 
     # Parameter YOLO (hanya untuk INFERENCE_BACKEND=yolo)
