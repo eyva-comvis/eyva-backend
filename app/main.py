@@ -33,7 +33,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(accounts.router)
-app.include_router(admin.router)
+app.include_router(admin.router, include_in_schema=False)  # tetap aktif, tidak dipublikasikan di Swagger
 app.include_router(admin.page_router)
 app.include_router(sessions.router)
 app.include_router(predict.router)
@@ -61,4 +61,4 @@ def health():
 @app.get("/", include_in_schema=False)
 def root():
     """Halaman sambutan agar membuka URL backend di browser tidak tampil 404."""
-    return {"service": "Eyva Smart Study Assistant API", "status": "ok", "docs": "/docs", "health": "/health", "dashboard": "/dashboard"}
+    return {"service": "Eyva Smart Study Assistant API", "status": "ok", "docs": "/docs", "health": "/health"}

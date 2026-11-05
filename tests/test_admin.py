@@ -99,3 +99,10 @@ def test_dashboard_page_is_public_html_without_data(env):
     assert "Eyva Admin" in r.text and "a@example.com" not in r.text
     assert r.headers["x-content-type-options"] == "nosniff"
     assert "/dashboard" not in env.get("/openapi.json", headers=ANON).text  # tidak muncul di Swagger
+
+
+def test_admin_routes_work_but_are_not_advertised(env):
+    spec = env.get("/openapi.json", headers=ANON).text
+    assert "/admin/overview" not in spec and "/dashboard" not in spec
+    assert "dashboard" not in env.get("/", headers=ANON).text
+    assert env.get("/admin/overview", headers=hdr("admin")).status_code == 200
