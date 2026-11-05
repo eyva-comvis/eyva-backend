@@ -1,4 +1,4 @@
-# Backend Loopa untuk Railway (CPU). Bobot model harus ada di backend/models/best.pt sebelum build.
+# Backend Eyva untuk Railway (CPU). Bobot model harus ada di backend/models/best.pt sebelum build.
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1

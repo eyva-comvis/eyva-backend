@@ -1,4 +1,4 @@
-# TASKLIST — Smart Study Assistant (Loopa)
+# TASKLIST — Smart Study Assistant (Eyva)
 
 Acuan: `SMART_STUDY_ASSISTANT_PRD_v1.md` (PRD) dan `SMART_STUDY_ASSISTANT_Project_Brief_v2.md` (Brief).
 Terakhir diperbarui: 30 Oktober 2026. Target MVP: 13 November 2026.
@@ -44,7 +44,7 @@ Alamat produksi: web https://loopa-smart-study.vercel.app · backend https://loo
 - [x] ✅ Webcam hanya di fase belajar, fallback bila kamera ditolak, penanganan sesi hilang (404) tanpa membanjiri backend.
 - [x] ✅ Alert 1, Alert 2 (Lanjutkan/Akhiri), modal saran, konfirmasi akhiri sesi, tombol suara.
 - [x] ✅ Break timer, Summary, History, Statistics.
-- [x] ✅ Desain Figma: Inter, Tabler Icons, aset SVG resmi, palet Loopa; teks UI berbahasa Inggris.
+- [x] ✅ Desain Figma: Inter, Tabler Icons, aset SVG resmi, palet Eyva; teks UI berbahasa Inggris.
 
 ### AI
 - [x] ✅ Rekomendasi di Summary dan tip di halaman Break (OpenRouter: nemotron-3-ultra, cadangan Gemma). Hanya metrik terstruktur yang dikirim. Fallback teks aturan bila LLM gagal. Label sementara `[temp] AI model`.
@@ -94,7 +94,7 @@ Alamat produksi: web https://loopa-smart-study.vercel.app · backend https://loo
 
 ## 3. Panduan step-by-step
 
-> Jalankan semua perintah dari folder `loopa`. Python backend: `backend\.venv\Scripts\python.exe`.
+> Jalankan semua perintah dari folder `eyva`. Python backend: `backend\.venv\Scripts\python.exe`.
 
 ### P1. Kalibrasi temporal analysis
 
@@ -262,12 +262,12 @@ Batas minimum belajar 1 menit, jadi untuk uji cepat pakai belajar **1 menit** da
 | AT-16 | Klik tombol alert dua kali cepat | Aksi hanya diproses sekali (cek `events` di Summary: tidak ada duplikat) | ☐ |
 
 **C. Skrip demo (±8 menit)**
-1. **Home** → jelaskan Loopa, klik *Start session*.
+1. **Home** → jelaskan Eyva, klik *Start session*.
 2. **Setup**: belajar 2 menit, istirahat 1 menit; klik *Test audio* (bunyikan dua bip).
 3. Mulai sesi → izinkan kamera → tunjukkan status Normal dan counter.
 4. Tutup mata → **Alert 1** (suara + modal) → "Got it".
 5. Tutup mata lagi → **Alert 2** → "I'll do a quick reset" → modal saran → "I'm ready to continue".
-6. Biarkan timer habis → **Break**: tunjukkan tip "Loopa coach" dan label model → timer break.
+6. Biarkan timer habis → **Break**: tunjukkan tip "Eyva coach" dan label model → timer break.
 7. **Finish** → **Summary**: durasi, indikator, alert, rekomendasi AI.
 8. Buka **History** dan **Statistics**.
 9. Alternatif: ulangi dan pilih "End my session" di Alert 2 (langsung Summary).

@@ -1,6 +1,6 @@
 """Rekomendasi AI untuk Summary dan halaman Break.
 
-LLM TIDAK dilatih ulang: ia diberi konteks produk Loopa (LOOPA_CONTEXT) dan metrik terstruktur hasil
+LLM TIDAK dilatih ulang: ia diberi konteks produk Eyva (EYVA_CONTEXT) dan metrik terstruktur hasil
 kamera (YOLO kantukv2 -> analisis temporal -> decision engine). Tidak pernah ada frame/video yang dikirim.
 Bila LLM tidak tersedia, kembali ke teks aturan (fallback) agar sesi tetap bisa selesai.
 """
@@ -11,9 +11,9 @@ from app.schemas.models import InsightOut, SummaryOut
 from app.services import llm
 from app.services.session_store import Session, mono
 
-LOOPA_CONTEXT = """You are the study coach inside Loopa, a Pomodoro web app that watches for visual signs of drowsiness.
+EYVA_CONTEXT = """You are the study coach inside Eyva, a Pomodoro web app that watches for visual signs of drowsiness.
 
-How Loopa works (so you can explain things accurately):
+How Eyva works (so you can explain things accurately):
 - The user sets a custom study duration and break duration. The webcam is analysed ONLY during study blocks.
 - A YOLO model fine-tuned on the Roboflow "kantukv2" dataset detects per frame: eye_open / eye_closed, no_yawn / yawn, head_straight / head_dropped.
 - A temporal engine turns frames into events: blinks, yawns, prolonged eye closures, head dropped.
@@ -22,7 +22,7 @@ How Loopa works (so you can explain things accurately):
 
 Hard rules:
 - These are visual indications, never a diagnosis. Give no medical advice and do not name causes (sleep disorders, illness).
-- Loopa does NOT measure focus, concentration, attention or productivity. Never claim or imply it does.
+- Eyva does NOT measure focus, concentration, attention or productivity. Never claim or imply it does.
 - Use only the numbers provided. If the data is thin (short session, few events, no camera), say so plainly instead of guessing.
 - Tone: warm, calm, specific. Plain text only, no markdown, no emojis, no headings. English.
 - Suggestions must be concrete and small: stand and stretch, drink water, look away from the screen (20-20-20), adjust posture or lighting, take the break earlier, shorten the next study block, or sleep earlier tonight.
@@ -73,7 +73,7 @@ async def generate_insight(summary: SummaryOut, settings: Settings) -> InsightOu
         "shows, then give 2 or 3 concrete suggestions for the next session.\n\nSession metrics (JSON):\n"
         + json.dumps(_summary_context(summary))
     )
-    res = await llm.chat(settings, LOOPA_CONTEXT, user, max_tokens=600)
+    res = await llm.chat(settings, EYVA_CONTEXT, user, max_tokens=600)
     return InsightOut(source="llm", text=res.text, model=res.model) if res else fallback_insight(summary)
 
 
@@ -116,5 +116,5 @@ async def generate_break_tip(ctx: dict, settings: Settings) -> InsightOut:
         "2 to 3 sentences, one or two concrete things to do during this break, and (only if the data supports it) "
         "one hint for the next block.\n\nBlock metrics (JSON):\n" + json.dumps(ctx)
     )
-    res = await llm.chat(settings, LOOPA_CONTEXT, user, max_tokens=400)
+    res = await llm.chat(settings, EYVA_CONTEXT, user, max_tokens=400)
     return InsightOut(source="llm", text=res.text, model=res.model) if res else fallback_break_tip(ctx)

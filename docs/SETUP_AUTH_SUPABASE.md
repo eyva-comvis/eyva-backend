@@ -1,13 +1,13 @@
 # Setup: Supabase, Sign in with Google, dan deploy dari GitHub
 
-Status proyek Supabase `loopa` (org *Admrlrdj's Org*, region Paris/eu-west-3):
+Status proyek Supabase `eyva` (org *Admrlrdj's Org*, region Paris/eu-west-3):
 - URL: `https://siarvaknnerwvidoxqdi.supabase.co`
 - Skema (`backend/app/db/schema.sql`) **sudah dijalankan**: tabel `profiles`, `sessions`, `pomodoro_blocks`, `breaks`, `session_metrics`, `events`, trigger pembuat profil, dan Row Level Security.
 - Auth → URL Configuration: Site URL `https://loopa-smart-study.vercel.app`, Redirect URLs `https://loopa-smart-study.vercel.app/**` dan `http://localhost:3000/**`.
 
 ## 1. Aktifkan Sign in with Google (wajib dilakukan pemilik akun)
 
-1. Buka https://console.cloud.google.com → pilih/buat project → **APIs & Services → OAuth consent screen**: tipe *External*, isi nama aplikasi (Loopa), email dukungan, lalu simpan. Tambahkan email penguji di *Test users* bila status masih *Testing*.
+1. Buka https://console.cloud.google.com → pilih/buat project → **APIs & Services → OAuth consent screen**: tipe *External*, isi nama aplikasi (Eyva), email dukungan, lalu simpan. Tambahkan email penguji di *Test users* bila status masih *Testing*.
 2. **Credentials → Create credentials → OAuth client ID** → *Web application*:
    - Authorized JavaScript origins: `https://loopa-smart-study.vercel.app` dan `http://localhost:3000`
    - Authorized redirect URIs: `https://siarvaknnerwvidoxqdi.supabase.co/auth/v1/callback`

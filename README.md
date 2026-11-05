@@ -1,6 +1,6 @@
-# Loopa Backend — Smart Study Assistant (FastAPI + YOLO)
+# Eyva Backend — Smart Study Assistant (FastAPI + YOLO)
 
-Repo backend + model. Frontend ada di repo terpisah (`loopa-frontend`) dan memakai API ini lewat `NEXT_PUBLIC_API_URL`.
+Repo backend + model. Frontend ada di repo terpisah (`eyva-frontend`) dan memakai API ini lewat `NEXT_PUBLIC_API_URL`.
 Spesifikasi: `docs/SMART_STUDY_ASSISTANT_PRD_v1.md` dan `docs/SMART_STUDY_ASSISTANT_Project_Brief_v2.md`.
 
 ## Isi repo

@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from app.core.config import Settings
 from app.main import app
 from app.services import llm
-from app.services.insights import LOOPA_CONTEXT, break_context, fallback_break_tip, generate_break_tip, generate_insight
+from app.services.insights import EYVA_CONTEXT, break_context, fallback_break_tip, generate_break_tip, generate_insight
 from app.schemas.models import SummaryOut
 
 
@@ -59,7 +59,7 @@ def test_generate_insight_uses_llm_and_never_sends_frames(monkeypatch):
     monkeypatch.setattr(llm, "chat", fake_chat)
     r = asyncio.run(generate_insight(_summary(), _settings()))
     assert r.source == "llm" and r.text.startswith("Great") and r.model == "m1"
-    assert seen["system"] == LOOPA_CONTEXT and "image" not in seen["user"].lower()
+    assert seen["system"] == EYVA_CONTEXT and "image" not in seen["user"].lower()
     assert '"blinks_per_minute": 12.0' in seen["user"]
 
 

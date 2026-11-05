@@ -88,7 +88,7 @@ async def chat(settings: Settings, system: str, user: str, *, max_tokens: int = 
     headers = {
         "Authorization": f"Bearer {settings.llm_api_key}",
         "Content-Type": "application/json",
-        "X-Title": "Loopa Smart Study Assistant",  # atribusi opsional OpenRouter
+        "X-Title": "Eyva Smart Study Assistant",  # atribusi opsional OpenRouter
     }
     models = [settings.llm_model, *[m.strip() for m in settings.llm_fallback_models.split(",") if m.strip()]]
     deadline = time.monotonic() + settings.llm_total_seconds

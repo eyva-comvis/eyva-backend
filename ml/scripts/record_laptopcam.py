@@ -187,7 +187,7 @@ def main() -> None:
         cap.release()
         return
 
-    win = "Loopa - rekam data webcam"
+    win = "Eyva - rekam data webcam"
     cv2.namedWindow(win)
     results = []
     try:

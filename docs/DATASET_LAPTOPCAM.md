@@ -7,7 +7,7 @@ kantukv2 berisi frame **kamera di dalam mobil** (pengemudi, latar kabin). Webcam
 
 ## Panduan langkah demi langkah
 
-Semua perintah dijalankan dari folder `loopa` (PowerShell). Total waktu: rekam ±15 menit, latih ±1–3 jam di CPU (atau ±15 menit di GPU Colab).
+Semua perintah dijalankan dari folder `eyva` (PowerShell). Total waktu: rekam ±15 menit, latih ±1–3 jam di CPU (atau ±15 menit di GPU Colab).
 
 **A. Siapkan (sekali saja)**
 1. Buka `backend/.env`, tambahkan baris `ENABLE_DETECT=true`, simpan. Pastikan `frontend/.env.local` berisi `NEXT_PUBLIC_API_URL=http://localhost:8000` (alat ini hanya jalan di lokal, jangan aktifkan di Railway).

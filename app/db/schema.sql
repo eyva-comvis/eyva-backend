@@ -1,4 +1,4 @@
--- Skema Supabase/PostgreSQL untuk Loopa (PRD bagian 11 + akun pengguna).
+-- Skema Supabase/PostgreSQL untuk Eyva (PRD bagian 11 + akun pengguna).
 -- Jalankan SELURUH berkas ini di Supabase -> SQL Editor -> New query -> Run. Aman dijalankan ulang.
 -- Tidak ada kolom untuk frame/video: hanya metrik dan event (NFR-01).
 -- Backend memakai service_role (melewati RLS); RLS melindungi akses langsung dari browser (anon key).

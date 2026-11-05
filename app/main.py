@@ -57,4 +57,4 @@ def health():
 @app.get("/", include_in_schema=False)
 def root():
     """Halaman sambutan agar membuka URL backend di browser tidak tampil 404."""
-    return {"service": "Loopa Smart Study Assistant API", "status": "ok", "docs": "/docs", "health": "/health"}
+    return {"service": "Eyva Smart Study Assistant API", "status": "ok", "docs": "/docs", "health": "/health"}
