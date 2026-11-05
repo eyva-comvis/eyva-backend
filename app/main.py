@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import accounts, admin, auth, detect, predict, profile, sessions, stats
+from app.api import accounts, auth, detect, predict, profile, sessions, stats
 from app.core.config import get_settings
 from app.db.repository import Persister, build_repository
 from app.services.inference import build_engine
@@ -36,8 +36,6 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(accounts.router)
-app.include_router(admin.router, include_in_schema=False)  # tetap aktif, tidak dipublikasikan di Swagger
-app.include_router(admin.page_router)
 app.include_router(profile.router)
 app.include_router(sessions.router)
 app.include_router(predict.router)

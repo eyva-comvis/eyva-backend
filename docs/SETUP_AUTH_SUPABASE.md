@@ -106,7 +106,6 @@ Railway (Variables):
 | `SUPABASE_URL` | `https://<ref>.supabase.co` (token diverifikasi otomatis lewat JWKS) |
 | `SUPABASE_SERVICE_KEY` | Secret key (service_role), isi lewat dashboard |
 | `SUPABASE_ANON_KEY` | Publishable key (untuk alur lupa password; bila kosong dipakai service key) |
-| `ADMIN_EMAILS` | Email admin dipisah koma (boleh buka `/dashboard`), mis. `a@gmail.com,b@gmail.com` |
 | `SESSION_MAX_HOURS` | Batas umur login dalam jam (default `12`); lewat batas, pengguna harus login ulang |
 | `CORS_ORIGINS` | `https://<vercel-url>,http://localhost:3000` |
 
@@ -145,7 +144,7 @@ Setup di Supabase (sekali):
 3. **Authentication → SMTP Settings**: pasang SMTP sendiri (mis. Resend/Brevo/Gmail). SMTP bawaan Supabase hanya mengirim ke anggota tim dan dibatasi beberapa email per jam.
 4. Railway: tambahkan `SUPABASE_ANON_KEY` (publishable key).
 
-## Daftar, login, dan dashboard admin
+## Daftar dan login
 
 Pendaftaran terbuka untuk siapa saja: **Continue with email** (endpoint di bawah) atau **Sign in with Google** (frontend memanggil Supabase langsung).
 
@@ -160,5 +159,3 @@ Pendaftaran terbuka untuk siapa saja: **Continue with email** (endpoint di bawah
 Login dibatasi 8 percobaan gagal per IP + email dalam 10 menit (429). Token dikirim sebagai `Authorization: Bearer <access_token>`.
 
 Setup Supabase tambahan: **Authentication → Email Templates → Confirm sign up**, isi dengan kode `{{ .Token }}` (bukan link), sama seperti template Reset Password.
-
-**Dashboard admin**: buka `https://<railway-url>/dashboard`. Isi `ADMIN_EMAILS` di Railway dengan email admin. Masuk dengan email + password (akun yang hanya pernah login Google: tab *Lupa password* untuk membuat password). Menampilkan status sistem, jumlah pengguna dan sesi, grafik 14 hari, mood, serta pengguna dan sesi terbaru. Data memakai `SUPABASE_SERVICE_KEY`; API-nya `GET /admin/overview` (403 untuk non-admin).
