@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eyva Privacy Policy</title>
+<style>
+:root{--bg:#faf8f2;--panel:#fff;--ink:#17141f;--muted:#6b6577;--line:#e6e1d8;--brand:#6d28d9}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121016;--panel:#1b1822;--ink:#f1eef7;--muted:#a39bb3;--line:#2c2736;--brand:#a78bfa}}
+:root[data-theme="dark"]{--bg:#121016;--panel:#1b1822;--ink:#f1eef7;--muted:#a39bb3;--line:#2c2736;--brand:#a78bfa}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:40px 16px 64px}
+h1{font-size:28px;margin:0 0 4px}
+h2{font-size:18px;margin:32px 0 8px}
+p,li{color:var(--ink)}
+.muted{color:var(--muted);font-size:14px}
+a{color:var(--brand)}
+ul{padding-left:20px}
+</style>
+</head>
+<body>
+<main>
+<h1>Eyva Privacy Policy</h1>
+<p class="muted">Last updated: 5 November 2026</p>
+
+<p>Eyva (Smart Study Assistant) is a student project from IPB University. It helps you study with a Pomodoro timer and uses your webcam to detect signs of drowsiness. This page explains what data Eyva handles and why.</p>
+
+<h2>Account data</h2>
+<p>You sign in with Google or with an email and password. Authentication is handled by Supabase. Eyva stores your email address, a username, and an avatar. When you sign in with Google, Eyva receives only your basic profile (name, email address, and profile picture) and uses it only to create and identify your account. Eyva does not access your Gmail, Google Drive, contacts, or any other Google data.</p>
+
+<h2>Webcam images</h2>
+<p>During a study session, camera frames are sent to the Eyva server only to detect eye state, yawning, and head position. Frames are processed in memory and discarded right away. Eyva does not store, record, or share photos or video from your camera. You can deny camera permission at any time.</p>
+
+<h2>Study session data</h2>
+<p>Eyva stores numeric results of each session in its database: session times, focus and break durations, counts of blinks, yawns, and alerts, an estimated drowsiness score, the session title, and your optional mood reflection. This data is linked to your account so you can see your history and statistics. Other users cannot see it.</p>
+
+<h2>AI-generated tips</h2>
+<p>To write study insights and break tips, Eyva sends a summary of session statistics (numbers only, no images and no email address) to a language model provider through OpenRouter.</p>
+
+<h2>Emails</h2>
+<p>Eyva sends emails only for account purposes, such as verification codes and password reset codes.</p>
+
+<h2>What Eyva does not do</h2>
+<ul>
+  <li>Eyva does not sell your data or use it for advertising.</li>
+  <li>Eyva does not share your data with third parties except the service providers needed to run the app: Supabase (authentication and database), Railway and Vercel (hosting), and OpenRouter (AI tips).</li>
+</ul>
+
+<h2>Deleting your data</h2>
+<p>You can ask us to delete your account and all your session history by emailing <a href="mailto:radjaadmiral00@gmail.com">radjaadmiral00@gmail.com</a>. We will process the request within 14 days.</p>
+
+<h2>Contact</h2>
+<p>Questions about this policy: <a href="mailto:radjaadmiral00@gmail.com">radjaadmiral00@gmail.com</a>.</p>
+</main>
+</body>
+</html>

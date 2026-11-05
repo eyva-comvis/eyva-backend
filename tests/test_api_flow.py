@@ -101,3 +101,9 @@ def test_cors_preflight_allows_loopback_on_any_port(client):
 def test_root_is_friendly(client):
     r = client.get("/")
     assert r.status_code == 200 and r.json()["docs"] == "/docs"
+
+
+def test_privacy_page_is_public(client):
+    r = client.get("/privacy", headers={"Authorization": ""})
+    assert r.status_code == 200 and r.headers["content-type"].startswith("text/html")
+    assert "Privacy Policy" in r.text and "does not store" in r.text

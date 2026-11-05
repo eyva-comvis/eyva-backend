@@ -1,6 +1,9 @@
 from contextlib import asynccontextmanager
 
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import accounts, admin, auth, detect, predict, sessions, stats
@@ -56,6 +59,12 @@ def health():
             "fallbacks": [m.strip() for m in s.llm_fallback_models.split(",") if m.strip()],
         },
     }
+
+
+@app.get("/privacy", include_in_schema=False)
+def privacy():
+    """Kebijakan privasi publik (dipakai di OAuth consent screen Google)."""
+    return FileResponse(Path(__file__).parent / "static" / "privacy.html", media_type="text/html")
 
 
 @app.get("/", include_in_schema=False)
