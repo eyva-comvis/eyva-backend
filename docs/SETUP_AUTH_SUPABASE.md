@@ -1,44 +1,124 @@
-# Setup: Supabase, Sign in with Google, dan deploy dari GitHub
+# Setup ulang Eyva: GitHub → Railway → Vercel → Supabase → Google Sign-In
 
-Status proyek Supabase `eyva` (org *Admrlrdj's Org*, region Paris/eu-west-3):
-- URL: `https://siarvaknnerwvidoxqdi.supabase.co`
-- Skema (`backend/app/db/schema.sql`) **sudah dijalankan**: tabel `profiles`, `sessions`, `pomodoro_blocks`, `breaks`, `session_metrics`, `events`, trigger pembuat profil, dan Row Level Security.
-- Auth → URL Configuration: Site URL `https://loopa-smart-study.vercel.app`, Redirect URLs `https://loopa-smart-study.vercel.app/**` dan `http://localhost:3000/**`.
+Panduan ini dibuat setelah rebranding Loopa → Eyva dan pemisahan repo. Semua layanan lama (Vercel, Railway, Supabase, Google OAuth) dihapus, jadi semuanya dibuat dari nol.
 
-## 1. Aktifkan Sign in with Google (wajib dilakukan pemilik akun)
+Placeholder: `<org>` = organisasi GitHub, `<railway-url>` = domain publik Railway, `<vercel-url>` = domain Vercel, `<ref>` = project ref Supabase.
 
-1. Buka https://console.cloud.google.com → pilih/buat project → **APIs & Services → OAuth consent screen**: tipe *External*, isi nama aplikasi (Eyva), email dukungan, lalu simpan. Tambahkan email penguji di *Test users* bila status masih *Testing*.
-2. **Credentials → Create credentials → OAuth client ID** → *Web application*:
-   - Authorized JavaScript origins: `https://loopa-smart-study.vercel.app` dan `http://localhost:3000`
-   - Authorized redirect URIs: `https://siarvaknnerwvidoxqdi.supabase.co/auth/v1/callback`
-3. Salin **Client ID** dan **Client secret**.
-4. Supabase → **Authentication → Sign In / Providers → Google** → aktifkan, tempel Client ID dan Client secret, simpan. (Secret hanya diisi di dashboard Supabase, jangan di repo atau chat.)
-5. Uji: buka `/login` → *Continue with Google*.
+Urutan penting karena saling bergantung:
 
-## 2. Variabel lingkungan
-
-| Tempat | Variabel | Nilai |
+| Langkah | Butuh dari langkah lain | Dihasilkan |
 |---|---|---|
-| Vercel (Production) | `NEXT_PUBLIC_API_URL` | `https://loopa-backend-production-44f3.up.railway.app` |
-| Vercel (Production) | `NEXT_PUBLIC_SUPABASE_URL` | `https://siarvaknnerwvidoxqdi.supabase.co` |
-| Vercel (Production) | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Publishable key (Supabase → Settings → API Keys). Aman untuk browser. |
-| Railway (`loopa-backend`) | `SUPABASE_URL` | `https://siarvaknnerwvidoxqdi.supabase.co` (otomatis memverifikasi token lewat JWKS) |
-| Railway (`loopa-backend`) | `SUPABASE_SERVICE_KEY` | **Secret key** (Supabase → Settings → API Keys). Rahasia: isi lewat dashboard Railway. |
-| Railway (`loopa-backend`) | `AUTH_REQUIRED` | `false` (tamu boleh) atau `true` (wajib login) |
-| Railway (`loopa-backend`) | `CORS_ORIGINS` | `https://loopa-smart-study.vercel.app,http://localhost:3000` |
+| 1. GitHub backend | - | repo `eyva-backend` |
+| 2. Railway | repo backend | `<railway-url>` |
+| 3. Clone frontend | - | folder lokal |
+| 4. Vercel | `<railway-url>` | `<vercel-url>` |
+| 5. Supabase | `<vercel-url>` | `<ref>`, anon key, secret key |
+| 6. Google OAuth | `<ref>`, `<vercel-url>` | Client ID + secret |
+| 7. Sambungkan | semua | redeploy Railway + Vercel |
 
-Cek hasilnya: `GET /health` harus menampilkan `"persistence": true` dan `"auth": {"enabled": true, ...}`.
+## 1. Push backend ke GitHub
 
-## 3. Deploy otomatis dari GitHub (`Admrlrdj/loopa`, branch `main`)
+Repo `eyva-backend` di `<org>` dibuat kosong (tanpa README/.gitignore/license).
 
-**Railway** (`loopa-backend`): Settings → Source → *Connect Repo* → `Admrlrdj/loopa`, branch `main`, **Root Directory `backend`** (memakai `backend/Dockerfile`; `backend/models/best.pt` harus ada di repo).
+```bash
+cd eyva-backend
+git remote add origin https://github.com/<org>/eyva-backend.git
+git push -u origin main
+```
 
-**Vercel** (`loopa-smart-study`): Settings → Git → *Connect Git Repository* → `Admrlrdj/loopa`; Settings → General → **Root Directory `frontend`**, Framework Next.js.
+Cek di GitHub: `models/best.pt` ada, `.env` tidak ada.
 
-**Status: keduanya sudah terhubung ke `Admrlrdj/loopa` (Railway Root Directory `/backend`, Vercel Root Directory `frontend`).** Setiap `git push` ke `main` men-deploy keduanya; jangan lagi memakai `vercel deploy` dari folder `frontend`. Sesi disimpan ke Supabase (write-behind) dan sesi yang sedang berjalan dimuat ulang dari database saat dibutuhkan, jadi redeploy tidak mereset sesi (butuh `SUPABASE_SERVICE_KEY`; sinkronisasi terakhir sebelum redeploy bisa tertinggal beberapa detik).
+## 2. Railway dari GitHub
 
-## 4. Perilaku akun
+1. https://railway.com → **New Project** → **Deploy from GitHub repo** → pilih `<org>/eyva-backend`. Jika org tidak muncul: *Configure GitHub App* dan beri akses ke repo itu.
+2. Biarkan **Root Directory kosong**. Railway memakai `Dockerfile` di root. Build pertama ±5–10 menit (torch CPU).
+3. Service → **Variables** → tambahkan:
 
-- Pengguna masuk: sesi, riwayat, statistik, dan refleksi tersimpan per akun (`sessions.user_id`). Sesi orang lain tidak bisa diakses (dijawab 404).
-- Tamu (tanpa login): sesi berjalan normal tetapi tidak muncul di riwayat/statistik bila login aktif di backend.
+   | Variabel | Nilai |
+   |---|---|
+   | `APP_ENV` | `production` |
+   | `CORS_ORIGINS` | sementara `http://localhost:3000`, diganti di langkah 7 |
+   | `EYE_CLOSURE_SECONDS` | sesuai kalibrasi (lihat `.env.example`) |
+   | `ALERT1_CONFIRM_SECONDS` | idem |
+   | `ALERT2_RECHECK_SECONDS` | idem |
+   | `ALERT_COOLDOWN_SECONDS` | idem |
+   | `LLM_API_KEY` | key OpenRouter (https://openrouter.ai/keys) |
+   | `LLM_BASE_URL` | `https://openrouter.ai/api/v1` |
+   | `LLM_MODEL` | lihat `.env.example` / README |
+   | `LLM_FALLBACK_MODELS` | opsional |
+   | `LLM_TIMEOUT_SECONDS` | lihat `.env.example` |
+
+   Jangan set `PORT`; Railway mengisinya. `INFERENCE_BACKEND=yolo`, `MODEL_PATH`, `YOLO_DEVICE`, `YOLO_IMGSZ` sudah ada di `Dockerfile`.
+   Variabel Supabase ditambahkan di langkah 7.
+4. **Settings → Deploy**: replicas = **1** (state sesi ada di memori).
+5. **Settings → Networking → Generate Domain** → catat `<railway-url>`.
+6. Tes: `curl https://<railway-url>/health` → `status: ok`, `inference_backend: yolo`, `persistence: false` (belum ada Supabase).
+
+## 3. Clone frontend dari organisasi
+
+```bash
+git clone https://github.com/<org>/eyva-frontend.git
+cd eyva-frontend
+npm install
+copy .env.local.example .env.local    # NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+Pastikan nama repo sama dengan yang dibuat di org. Pekerjaan Vezajiva lewat branch/PR, bukan langsung ke `main`.
+
+## 4. Vercel
+
+1. https://vercel.com/new → **Import Git Repository** → pilih `<org>/eyva-frontend`. Jika org tidak muncul: *Adjust GitHub App Permissions*.
+2. Framework **Next.js**, Root Directory **kosong** (`./`).
+3. **Environment Variables** (Production):
+   - `NEXT_PUBLIC_API_URL` = `https://<railway-url>` (tanpa slash di akhir)
+   - `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` diisi di langkah 7.
+4. **Deploy**. Catat `<vercel-url>`.
+5. Nilai `NEXT_PUBLIC_*` tertanam saat build, jadi tiap mengubahnya harus **Redeploy**.
+
+## 5. Supabase
+
+1. https://supabase.com → **New project** (catat password database, region dekat Indonesia mis. Singapore).
+2. **SQL Editor** → tempel seluruh isi `app/db/schema.sql` dari repo backend → **Run**. Membuat tabel `profiles`, `sessions`, `pomodoro_blocks`, `breaks`, `session_metrics`, `events`, trigger pembuat profil, dan Row Level Security.
+3. **Authentication → URL Configuration**:
+   - Site URL: `https://<vercel-url>`
+   - Redirect URLs: `https://<vercel-url>/**` dan `http://localhost:3000/**`
+4. **Project Settings → API Keys**, catat:
+   - Project URL: `https://<ref>.supabase.co`
+   - Publishable key (anon): aman untuk browser, untuk Vercel
+   - Secret key (service_role): **rahasia**, hanya untuk Railway
+
+## 6. Google OAuth
+
+1. https://console.cloud.google.com → buat/pilih project → **APIs & Services → OAuth consent screen**: tipe *External*, nama aplikasi `Eyva`, email dukungan, simpan. Selama status *Testing*, tambahkan email penguji di *Test users*.
+2. **Credentials → Create credentials → OAuth client ID** → *Web application*:
+   - Authorized JavaScript origins: `https://<vercel-url>` dan `http://localhost:3000`
+   - Authorized redirect URIs: `https://<ref>.supabase.co/auth/v1/callback`
+3. Salin **Client ID** dan **Client secret**.
+4. Supabase → **Authentication → Sign In / Providers → Google** → aktifkan, tempel keduanya, simpan. Secret hanya di dashboard Supabase, jangan di repo atau chat.
+5. Untuk publik (bukan hanya test user): isi privacy policy di consent screen dengan `https://<vercel-url>/privacy`, lalu *Publish app*.
+
+## 7. Sambungkan semuanya
+
+Railway (Variables):
+
+| Variabel | Nilai |
+|---|---|
+| `SUPABASE_URL` | `https://<ref>.supabase.co` (token diverifikasi otomatis lewat JWKS) |
+| `SUPABASE_SERVICE_KEY` | Secret key (service_role), isi lewat dashboard |
+| `AUTH_REQUIRED` | `false` (tamu boleh) atau `true` (wajib login) |
+| `CORS_ORIGINS` | `https://<vercel-url>,http://localhost:3000` |
+
+Vercel (Environment Variables, Production): `NEXT_PUBLIC_SUPABASE_URL` = `https://<ref>.supabase.co`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` = publishable key. Lalu **Redeploy**.
+
+Verifikasi:
+1. `GET https://<railway-url>/health` → `"persistence": true` dan `"auth": {"enabled": true, ...}`.
+2. Buka `<vercel-url>`: Home menampilkan backend terhubung, tanpa error CORS di DevTools.
+3. `/login` → *Continue with Google* → kembali ke aplikasi dalam keadaan login.
+4. Jalankan satu sesi penuh, lalu cek riwayat dan baris baru di tabel `sessions` Supabase.
+
+## Perilaku akun
+
+- Pengguna masuk: sesi, riwayat, statistik, dan refleksi tersimpan per akun (`sessions.user_id`). Sesi orang lain tidak bisa diakses (404).
+- Tamu: sesi berjalan normal tetapi tidak muncul di riwayat/statistik bila login aktif di backend.
 - Username dan avatar diedit di `/profile` (tabel `profiles`, dilindungi RLS; username 3–24 karakter `A-Za-z0-9_.` dan unik).
+- Setiap push ke `main` men-deploy otomatis ke Railway/Vercel. Sesi aktif dimuat ulang dari Supabase setelah redeploy (butuh `SUPABASE_SERVICE_KEY`).
