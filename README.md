@@ -1,9 +1,17 @@
-# Backend — Smart Study Assistant (FastAPI)
+# Loopa Backend — Smart Study Assistant (FastAPI + YOLO)
+
+Repo backend + model. Frontend ada di repo terpisah (`loopa-frontend`) dan memakai API ini lewat `NEXT_PUBLIC_API_URL`.
+Spesifikasi: `docs/SMART_STUDY_ASSISTANT_PRD_v1.md` dan `docs/SMART_STUDY_ASSISTANT_Project_Brief_v2.md`.
+
+## Isi repo
+- `app/`, `tests/`, `Dockerfile`: service FastAPI (deploy Railway, root repo = root service).
+- `models/best.pt`: bobot YOLO11n yang dipakai produksi.
+- `ml/`: skrip training/evaluasi (`ml/scripts`), notebook Colab (`ml/notebooks`), laporan (`ml/metadata`). Jalankan dari root repo, mis. `python ml/scripts/train_yolo.py ...`. Dataset tidak di-commit (`datasets/`).
+- `docs/`: PRD, Project Brief, setup Supabase, tasklist.
 
 ## Menjalankan
 
 ```bash
-cd backend
 py -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
@@ -21,7 +29,7 @@ Tes: `pytest -q`
 - `INFERENCE_BACKEND=yolo`: lihat bagian "Memakai model YOLO" di bawah.
 
 ## Memakai model YOLO
-1. `pip install -r requirements-ml.txt` (menarik torch, besar), taruh `best.pt` di `models/` (root repo).
+1. `pip install -r requirements-ml.txt` (menarik torch, besar), `best.pt` ada di `models/` (root repo).
 2. Set `INFERENCE_BACKEND=yolo` di `.env`. Jika nama kelas di `data.yaml` beda, isi `YOLO_LABEL_ALIASES`.
 3. Uji dulu tanpa server: `python scripts/check_inference.py sample.jpg --runs 30 --save out.jpg`
    (cetak deteksi, latensi rata-rata/p95, dan gambar beranotasi).
