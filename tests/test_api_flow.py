@@ -107,3 +107,8 @@ def test_privacy_page_is_public(client):
     r = client.get("/privacy", headers={"Authorization": ""})
     assert r.status_code == 200 and r.headers["content-type"].startswith("text/html")
     assert "Privacy Policy" in r.text and "does not store" in r.text
+
+
+def test_terms_page_is_public(client):
+    r = client.get("/terms", headers={"Authorization": ""})
+    assert r.status_code == 200 and "Terms of Service" in r.text and "/privacy" in r.text

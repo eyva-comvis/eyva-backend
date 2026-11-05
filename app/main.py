@@ -68,6 +68,12 @@ def privacy():
     return FileResponse(Path(__file__).parent / "static" / "privacy.html", media_type="text/html")
 
 
+@app.get("/terms", include_in_schema=False)
+def terms():
+    """Ketentuan layanan publik (ditautkan dari halaman awal frontend)."""
+    return FileResponse(Path(__file__).parent / "static" / "terms.html", media_type="text/html")
+
+
 @app.get("/", include_in_schema=False)
 def root():
     """Halaman sambutan agar membuka URL backend di browser tidak tampil 404."""

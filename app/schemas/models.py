@@ -130,6 +130,7 @@ class SessionListItem(BaseModel):
     id: str
     title: str = "Study Session"
     reflection: str | None = None
+    soundtrack: str | None = None
     status: str  # ACTIVE | ENDED | INTERRUPTED (server restart saat sesi berjalan)
     started_at: datetime
     ended_at: datetime | None

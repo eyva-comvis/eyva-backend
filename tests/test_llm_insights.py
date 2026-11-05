@@ -148,3 +148,13 @@ def test_reasoning_detector_catches_leaks_anywhere_but_not_good_answers():
     ]
     assert all(llm.looks_like_reasoning(t) for t in bad)
     assert not any(llm.looks_like_reasoning(t) for t in good)
+
+
+def test_break_tip_during_quick_reset_uses_reset_context():
+    with TestClient(app) as c:
+        sid = c.post("/sessions", json={"configured_study_seconds": 60, "configured_break_seconds": 60}).json()["id"]
+        c.post(f"/sessions/{sid}/blocks")
+        ctx = break_context(app.state.store.get(sid))  # blok masih berjalan (dijeda setelah alert 2)
+        assert ctx["break_reason"] == "quick_reset_after_drowsiness_alert"
+        r = c.post(f"/sessions/{sid}/break-tip")
+        assert r.status_code == 200 and "reset" in r.json()["text"]

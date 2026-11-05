@@ -85,6 +85,7 @@ def break_context(s: Session) -> dict:
     in_last = [a for a in s.alerts.values() if last and a.block_id == last.id]
     study_min = round((last.active_seconds(m) if last else 0) / 60, 1)
     return {
+        "break_reason": "quick_reset_after_drowsiness_alert" if last and last.status == "ACTIVE" else "study_block_finished",
         "block_number": last.sequence_number if last else 0,
         "last_block_study_minutes": study_min,
         "last_block_alert_1": sum(a.level == 1 for a in in_last),
@@ -100,7 +101,10 @@ def break_context(s: Session) -> dict:
 
 
 def fallback_break_tip(ctx: dict) -> InsightOut:
-    if ctx["last_block_alert_2"]:
+    if ctx.get("break_reason") == "quick_reset_after_drowsiness_alert":
+        text = ("Signs of drowsiness kept showing up, so take this reset seriously. Stand up, drink some water and "
+                "look at something far away before you continue.")
+    elif ctx["last_block_alert_2"]:
         text = ("You hit two alerts in that block, so this break matters. Stand up, drink some water and look at "
                 "something far away. Consider a shorter next block.")
     elif ctx["last_block_alert_1"] or ctx["session_yawns"] or ctx["session_prolonged_eye_closures"]:
@@ -111,10 +115,15 @@ def fallback_break_tip(ctx: dict) -> InsightOut:
 
 
 async def generate_break_tip(ctx: dict, settings: Settings) -> InsightOut:
+    situation = (
+        "The user paused their study block for a short reset after a second drowsiness alert, and will continue the "
+        "same block afterwards." if ctx.get("break_reason") == "quick_reset_after_drowsiness_alert"
+        else "The user just finished a study block and is starting a break."
+    )
     user = (
-        "The user just finished a study block and is starting a break. Write ONE short tip for the Break page: "
+        f"{situation} Write ONE short tip for the Break page: "
         "2 to 3 sentences, one or two concrete things to do during this break, and (only if the data supports it) "
-        "one hint for the next block.\n\nBlock metrics (JSON):\n" + json.dumps(ctx)
+        "one hint for when they continue.\n\nBlock metrics (JSON):\n" + json.dumps(ctx)
     )
     res = await llm.chat(settings, EYVA_CONTEXT, user, max_tokens=400)
     return InsightOut(source="llm", text=res.text, model=res.model) if res else fallback_break_tip(ctx)

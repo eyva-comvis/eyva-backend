@@ -19,6 +19,7 @@ def _status_from_db(status: str) -> str:
 def _item_from_row(r: dict) -> SessionListItem:
     return SessionListItem(
         id=r["id"], title=r.get("title") or "Study Session", reflection=r.get("reflection"),
+        soundtrack=r.get("soundtrack"),
         status=_status_from_db(r["status"]),
         started_at=r["started_at"], ended_at=r.get("ended_at"), end_reason=r.get("end_reason"),
         total_study_seconds=r.get("total_study_seconds") or 0,
@@ -51,7 +52,8 @@ async def list_items(app: FastAPI, limit: int, offset: int, user: User | None = 
             continue
         sm = build_summary(s)
         by_id[s.id] = SessionListItem(
-            id=s.id, title=s.title, reflection=s.reflection, status=s.status, started_at=s.started_at, ended_at=s.ended_at,
+            id=s.id, title=s.title, reflection=s.reflection, soundtrack=s.soundtrack, status=s.status,
+            started_at=s.started_at, ended_at=s.ended_at,
             end_reason=s.end_reason, total_study_seconds=sm.total_study_seconds,
             total_break_seconds=sm.total_break_seconds,
             estimated_drowsy_seconds=sm.estimated_drowsy_seconds, blink_count=sm.blink_count,

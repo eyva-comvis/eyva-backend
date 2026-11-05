@@ -157,3 +157,10 @@ def test_detect_endpoint_is_disabled_by_default_and_returns_boxes_when_enabled(c
     r = client.post("/detect", json=img)
     assert r.status_code == 200 and isinstance(r.json()["detections"], list)
     assert client.post("/detect", json={"image_b64": "AAAA", "imgsz": 50}).status_code == 422
+
+
+def test_history_includes_soundtrack(client):
+    h = token("music-fan")
+    sid = make(client, h, soundtrack="Ambient Rain")
+    item = next(i for i in client.get("/sessions", headers=h).json()["items"] if i["id"] == sid)
+    assert item["soundtrack"] == "Ambient Rain"
