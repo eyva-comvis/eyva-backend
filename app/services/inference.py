@@ -1,4 +1,4 @@
-"""Lapisan inferensi. Antarmuka tetap sama untuk mock dan YOLO asli.
+"""Lapisan inferensi. Antarmuka tetap sama untuk mock, YOLO lokal, dan remote API.
 
 Kelas yang dipakai pipeline temporal (verifikasi dengan data.yaml kantukv2):
 eye_open, eye_closed, yawn, no_yawn, head_straight, head_dropped
@@ -9,6 +9,8 @@ import threading
 import time
 from pathlib import Path
 from typing import Any, Callable, Protocol
+
+import httpx
 
 from app.core.config import Settings
 from app.schemas.models import Detection
@@ -137,6 +139,112 @@ class YoloInference:
                 "conf": self.conf, "imgsz": self.imgsz, "device": self.device or "auto"}
 
 
+class RemoteInference:
+    """Inferensi via REST API model Afin (misal di Railway).
+
+    Mengirim gambar mentah (JPEG/PNG) ke POST /v1/predict.
+    Konversi hasil deteksi ke format backend Eyva (normalisasi bbox 0..1, filter EXPECTED_CLASSES).
+    Toleran terhadap kegagalan jaringan atau worker model sibuk (skip frame, return []).
+    """
+
+    def __init__(
+        self,
+        api_url: str,
+        api_key: str,
+        timeout: float = 10.0,
+        client: httpx.Client | None = None,
+    ):
+        self.api_url = api_url.rstrip("/")
+        self.api_key = api_key
+        self.timeout = timeout
+        self.predict_url = f"{self.api_url}/v1/predict"
+        self._custom_client = client is not None
+        self._client = client or httpx.Client(timeout=timeout)
+
+    def predict(self, image_bytes: bytes, imgsz: int | None = None) -> list[Detection]:
+        if not image_bytes:
+            return []
+
+        # Deteksi content type dari magic bytes (default image/jpeg)
+        content_type = "image/png" if image_bytes.startswith(b"\x89PNG\r\n\x1a\n") else "image/jpeg"
+        headers = {
+            "X-API-Key": self.api_key,
+            "Content-Type": content_type,
+        }
+
+        try:
+            resp = self._client.post(self.predict_url, content=image_bytes, headers=headers)
+        except httpx.TimeoutException as exc:
+            log.warning("Timeout saat memanggil remote model (%s): %s", self.predict_url, exc)
+            return []
+        except httpx.RequestError as exc:
+            log.warning("Koneksi gagal ke remote model (%s): %s", self.predict_url, exc)
+            return []
+        except Exception as exc:
+            log.error("Error tak terduga saat request remote model: %s", exc)
+            return []
+
+        if resp.status_code == 200:
+            try:
+                data = resp.json()
+            except Exception as exc:
+                log.warning("Gagal parsing JSON dari remote model: %s", exc)
+                return []
+
+            w = float(data.get("image_width") or 0)
+            h = float(data.get("image_height") or 0)
+            detections: list[Detection] = []
+
+            for item in data.get("detections", []):
+                raw_name = str(item.get("class_name") or "")
+                label = _norm(raw_name)
+                if label not in EXPECTED_CLASSES:
+                    continue
+
+                conf = float(item.get("confidence") or 0.0)
+                raw_bbox = item.get("bbox_xyxy")
+                bbox: list[float] | None = None
+                if raw_bbox and len(raw_bbox) == 4 and w > 0 and h > 0:
+                    x1, y1, x2, y2 = [float(v) for v in raw_bbox]
+                    norm_x1 = max(0.0, min(1.0, x1 / w))
+                    norm_y1 = max(0.0, min(1.0, y1 / h))
+                    norm_x2 = max(0.0, min(1.0, x2 / w))
+                    norm_y2 = max(0.0, min(1.0, y2 / h))
+                    bbox = [norm_x1, norm_y1, norm_x2, norm_y2]
+
+                detections.append(Detection(label=label, confidence=conf, bbox=bbox))
+
+            return detections
+
+        if resp.status_code == 401:
+            log.error("Autentikasi model API gagal (401 Unauthorized). Periksa MODEL_API_KEY.")
+            return []
+        if resp.status_code == 422:
+            log.warning("Model API mengembalikan 422: format gambar tidak valid atau rusak.")
+            return []
+        if resp.status_code == 503:
+            log.warning("Model API mengembalikan 503: worker model sedang sibuk.")
+            return []
+        if resp.status_code == 408:
+            log.warning("Model API mengembalikan 408: timeout inferensi.")
+            return []
+
+        log.warning("Model API mengembalikan HTTP status %d: %s", resp.status_code, resp.text[:200])
+        return []
+
+    def info(self) -> dict:
+        # Keamanan: JANGAN PERNAH menyertakan self.api_key di dictionary info!
+        return {
+            "backend": "remote",
+            "url": self.api_url,
+            "timeout": self.timeout,
+        }
+
+    def close(self) -> None:
+        if self._client and not self._custom_client:
+            self._client.close()
+
+
 def decode_image(image_b64: str) -> bytes:
     if "," in image_b64[:50]:  # toleransi prefix data:image/jpeg;base64,
         image_b64 = image_b64.split(",", 1)[1]
@@ -149,4 +257,21 @@ def build_engine(settings: Settings) -> InferenceEngine:
         engine = YoloInference.from_path(settings.model_path, settings)
         log.info("Model YOLO dimuat dalam %.1f dtk: %s", time.perf_counter() - t0, engine.info())
         return engine
+    if settings.inference_backend == "remote":
+        if not settings.model_api_url or not settings.model_api_url.strip():
+            raise RuntimeError(
+                "INFERENCE_BACKEND=remote membutuhkan MODEL_API_URL yang valid. "
+                "Set di .env atau environment variables."
+            )
+        if not settings.model_api_key or not settings.model_api_key.strip():
+            raise RuntimeError(
+                "INFERENCE_BACKEND=remote membutuhkan MODEL_API_KEY yang valid. "
+                "Set di .env atau environment variables."
+            )
+        log.info("Remote inference engine diinisialisasi: url=%s, timeout=%.1fs", settings.model_api_url, settings.model_api_timeout)
+        return RemoteInference(
+            api_url=settings.model_api_url,
+            api_key=settings.model_api_key,
+            timeout=settings.model_api_timeout,
+        )
     return MockInference(settings.mock_scenario)

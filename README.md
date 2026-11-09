@@ -25,20 +25,62 @@ Tes: `pytest -q`
 > Jalankan **1 worker** uvicorn: state sesi disimpan di memori proses.
 
 ## Mode inferensi
-- `INFERENCE_BACKEND=mock` (default): tanpa model. `MOCK_SCENARIO=drowsy` memicu alert untuk uji frontend.
-- `INFERENCE_BACKEND=yolo`: lihat bagian "Memakai model YOLO" di bawah.
+- `INFERENCE_BACKEND=mock` (default dev lokal tanpa model): tanpa model. `MOCK_SCENARIO=drowsy` memicu alert untuk uji frontend.
+- `INFERENCE_BACKEND=remote`: memanggil API model eksternal (Afin di Railway) via `httpx`. Ringan, cepat, tidak memerlukan PyTorch/OpenCV lokal.
+- `INFERENCE_BACKEND=yolo`: inferensi YOLO lokal dengan bobot model (membutuhkan PyTorch + `requirements-ml.txt`).
 
-## Memakai model YOLO
-1. `pip install -r requirements-ml.txt` (menarik torch, besar), `best.pt` ada di `models/` (root repo).
-2. Set `INFERENCE_BACKEND=yolo` di `.env`. Jika nama kelas di `data.yaml` beda, isi `YOLO_LABEL_ALIASES`.
-3. Uji dulu tanpa server: `python scripts/check_inference.py sample.jpg --runs 30 --save out.jpg`
-   (cetak deteksi, latensi rata-rata/p95, dan gambar beranotasi).
-4. Jalankan server; `GET /health` menampilkan kelas model yang dimuat.
+## Memakai model Remote (API Afin di Railway)
+1. Cukup install dependensi ringan:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Atur konfigurasi di `.env`:
+   ```env
+   INFERENCE_BACKEND=remote
+   MODEL_API_URL=https://model-production-eyva.up.railway.app
+   MODEL_API_KEY=<kunci-api-dari-tim-model>
+   MODEL_API_TIMEOUT=10.0
+   ```
+3. Jalankan server:
+   ```bash
+   uvicorn app.main:app --reload --port 8000
+   ```
+4. Karakteristik & Kontrak:
+   - Request dikirim sebagai raw bytes dengan header `X-API-Key` dan `Content-Type: image/jpeg` (atau `image/png` jika header PNG).
+   - Bounding box piksel `[x1, y1, x2, y2]` dari model Afin dinormalisasi otomatis ke `[x1/W, y1/H, x2/W, y2/H]` (rentang 0..1) sesuai kontrak frontend Eyva.
+   - Deteksi difilter terhadap 6 kelas yang dikenali pipeline: `eye_open`, `eye_closed`, `yawn`, `no_yawn`, `head_straight`, `head_dropped`.
+   - Toleran terhadap error: status 422 (gambar rusak), 503 (worker model sibuk), 408/timeout, atau gangguan jaringan akan di-log dan mengembalikan `[]` (skip frame tanpa 500 ke frontend). Status 401 menghasilkan log error autentikasi yang jelas.
+   - Nilai `MODEL_API_KEY` tidak pernah dibocorkan ke log maupun endpoint `GET /health` / `info()`.
 
-Perilaku: server **gagal start dengan pesan jelas** bila `best.pt` tidak ada atau tidak satu pun kelas model dikenali
-(tidak diam-diam jatuh ke mock). Kelas di luar enam kelas pipeline dibuang. JPEG rusak dianggap tanpa deteksi.
-Model dipanggil dengan lock (tidak paralel), jadi **frontend harus menunggu respons sebelum mengirim frame berikutnya**.
-`YOLO_CONF` (0.25) hanya batas bawah deteksi; ambang keputusan sebenarnya `MIN_CONF` di `temporal.py` (0.4, sementara).
+## Memakai model YOLO Lokal
+1. Install dependensi ML (menarik PyTorch CPU, Ultralytics, OpenCV):
+   ```bash
+   pip install -r requirements-ml.txt
+   ```
+2. Letakkan bobot model lokal:
+   - Jika memiliki bobot `smartstudy_yolo11n_v2.pt`, letakkan di `models/` dan set:
+     ```env
+     INFERENCE_BACKEND=yolo
+     MODEL_PATH=models/smartstudy_yolo11n_v2.pt
+     ```
+   - Atau letakkan bobot sebagai `models/best.pt` (default `MODEL_PATH=models/best.pt`).
+3. Jika nama kelas di model berbeda, isi `YOLO_LABEL_ALIASES` di `.env`, misal `{"closed_eye":"eye_closed"}`.
+4. Uji tanpa server:
+   ```bash
+   python scripts/check_inference.py sample.jpg --runs 30 --save out.jpg
+   ```
+5. Perilaku: server **gagal start dengan pesan jelas** (`RuntimeError`) bila file bobot tidak ditemukan atau kelas tidak cocok.
+
+## Build Docker (Railway & Deployment)
+Dockerfile didesain modular dan ramah mode `remote`:
+- **Default (Ringan, ~150MB)**: Hanya menginstall `requirements.txt` tanpa PyTorch:
+  ```bash
+  docker build -t eyva-backend .
+  ```
+- **Mode Lokal ML (dengan PyTorch CPU + Ultralytics)**:
+  ```bash
+  docker build --build-arg INSTALL_ML=true -t eyva-backend .
+  ```
 
 ## Struktur
 ```

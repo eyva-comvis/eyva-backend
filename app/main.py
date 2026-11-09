@@ -20,6 +20,8 @@ async def lifespan(app: FastAPI):
     app.state.engine = build_engine(settings)  # model dimuat sekali saat startup
     app.state.persister = Persister(build_repository(settings))
     yield
+    if hasattr(app.state.engine, "close"):
+        app.state.engine.close()
     await app.state.persister.drain()  # selesaikan tulisan yang tertunda saat shutdown
 
 

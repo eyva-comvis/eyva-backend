@@ -11,9 +11,14 @@ class Settings(BaseSettings):
     # Dev: izinkan localhost/127.0.0.1 di port mana pun (mis. buka web lewat http://127.0.0.1:3000 atau port lain).
     cors_origin_regex: str = r"https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$"
 
-    inference_backend: str = "mock"  # mock | yolo
+    inference_backend: str = "remote"  # remote | mock | yolo
     model_path: str = "models/best.pt"
     mock_scenario: str = "normal"  # normal | drowsy
+
+    # Model API eksternal (hanya untuk INFERENCE_BACKEND=remote)
+    model_api_url: str = "https://model-production-eyva.up.railway.app"
+    model_api_key: str = ""
+    model_api_timeout: float = 10.0
 
     # Parameter YOLO (hanya untuk INFERENCE_BACKEND=yolo)
     yolo_conf: float = 0.25  # batas bawah deteksi; filter lebih ketat ada di temporal.MIN_CONF
